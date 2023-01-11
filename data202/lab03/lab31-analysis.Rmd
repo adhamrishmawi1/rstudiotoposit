@@ -1,0 +1,29 @@
+---
+title: "Lab 3.1 - Visualization Analysis"
+author: "Adham Rishmawi"
+date: "Spring 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document presents an analysis of an existing data visualization.
+
+## Analysing Wikipedia&rsquo;s US Federal Budget Visualization
+
+Wikipedia provides a visualization of the [US Federal budget](https://en.wikipedia.org/wiki/United_States_federal_budget) each year. Here's 
+this year&rsquo;s budget:
+
+[![2020 US Federal Budget (Wikipedia)](https://cs.calvin.edu/courses/info/601/resources/images/2020_US_Federal_Budget_Infographic.png)](https://upload.wikimedia.org/wikipedia/commons/f/fb/2020_US_Federal_Budget_Infographic.png)
+
+
+Edit this part of the document to give your analysis of the visualization of the spending part of the budget. Please give two to three paragraphs that address these foundational issues:
+
+- Purpose (key question and audience)
+  how are we supposed differentiate between the volumes in each portion of the pie graphs and come to a sold conclusion of what to derive from these graphs. The key question that this graph is trying ask is what are the US government spending and what is their general income. the two graphs are separated far enough from each other that as an observer, i can tell which graph refers to income and which refers to spending. However, the issues to observer starts to develop once you start looking at each individual graph. first issue resides in how they make comments in each categories from sections of the pie graphs. example of these comments are like mandatory spending, net interest, discretionary spending, etc... these labels cause issues because they take ones attention and tries to associated it with a spending/income category but fails to do that through a lack of sufficient amount trajectory for what the labels are pointing to.    
+
+- Composition (Yau&rsquo;s taxonomy &amp; whether it follows the general design principles)
+
+  the composition of this graph was to elaborate where most of the money for the government comes from and how it is spent each year. the graph is very consist with its habits of comments, labels, and pie graphs whether that be right or wrong. However, these graphs forget to consider that volume is one of the hardest dimension to fathom for humans and using a pie graph heavily relies on comparing two different volumes from each other. For example, look at Medicaid and Paycheck protection Program and look at how they almost identically consume the same amount of volume on the pie graph but in reality, have a 100 million dollar gap difference!

@@ -1,0 +1,61 @@
+---
+title: "Stat 245 -- HW ??"
+author: "A. Student"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+    fig_height: 2.2
+    fig_width: 4
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+```{r, setup, include = FALSE}
+# load packages that are going to be used
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = FALSE) # don't print warnings or messages in compiled document. So you MUST check them in RStudio!
+```
+
+
+```{r}
+# data1 <- read_csv("Work Order Data (CC Data Project).csv")
+ # write_csv(data1,"work_order.csv")
+```
+```{r}
+ #data2 <- read_csv("Work Order Data (CC Data Project)_wo_hdr_n_wo_parts.csv")
+ # write_csv(data2,"work_order2.csv")
+```
+```{r}
+#data3 <- read_csv("Work Order Data (CC Data Project)_wo_sgmt_n_wo_codes.csv")
+ # write_csv(data3,"work_order3.csv")
+```
+
+```{r}
+#data4 <- read_csv("~/Vermeer/Instprod_dtc_Drills_Calvin.csv")
+  #write_csv(data4,"Intsprod_dtc_azure.csv")
+```
+```{r}
+#data5 <- read_csv("~/Vermeer/AssetIdToVINPIN_data.csv")
+#write_csv(data5, "VINPINdata.csv")
+```
+
+
+
+
+
+  

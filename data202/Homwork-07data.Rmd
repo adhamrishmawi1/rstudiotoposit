@@ -1,0 +1,295 @@
+---
+title: "DATA 202 Homework 7"
+author: "Adham Rishmawi"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_download: true
+---
+
+```{r setup, include=FALSE}
+# Set some useful chunk options for code chunks.
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,    # display errors but keep going.
+  comment = "",    # don't add '##' characters before output.
+  message = FALSE  # don't include messages in the knitted output (check them in RStudio)
+  )
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+```{r message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidymodels)
+require(ggformula)
+require(mosaic)
+require(imager)
+library(rpart.plot)
+theme_set(theme_bw())
+```
+
+```{r}
+daily_rides <- readRDS(url("https://cs.calvin.edu/courses/info/602/06ensembles/hw/bikeshare-day.rds"))
+
+```
+
+A.
+```{r}
+gf_point(casual ~ date,
+         data = daily_rides,
+         color = ~workingday)
+```
+
+The Weekends seem to have a larger amount of casual rides occuring aganist the workdays!
+
+
+B.
+```{r}
+Historgram<- daily_rides|>
+gf_histogram(~casual, bins = 50)
+```
+
+
+C.
+
+```{r}
+daily_rides|>
+gf_histogram(~log(casual), bins = 50)
+```
+
+Try
+```{r}
+daily_rides %>% 
+  select(month, workingday, temp, atemp, casual) %>% 
+  GGally::ggpairs()
+```
+
+
+
+
+
+```{r}
+rides_2011 <- daily_rides %>% filter(year == 2011)
+rides_2012 <- daily_rides %>% filter(year == 2012)
+```
+
+```{r}
+set.seed(1234)
+rides_split <- initial_split(rides_2011, prop = 3/4)
+train <- training(rides_split)
+test <- testing(rides_split)
+```
+
+
+```{r}
+rides_2011_with_split_marked <- bind_rows(
+  train = train,
+  test = test,
+  .id = "split"
+) %>% mutate(split = as_factor(split)) %>% 
+  arrange(date)
+rides_2011_with_split_marked %>% head() %>% knitr::kable()
+```
+
+```{r}
+model_formula <- casual ~ temp + workingday + month
+```
+
+
+```{r}
+linreg_model <- fit(
+  linear_reg(),
+  model_formula,
+  data = train
+)
+  tidy(linreg_model)
+```
+"For Every additional degree C, the model predicts generally more additional rules."
+
+```{r}
+augment(linreg_model, train) %>% 
+  ggplot(aes(x = date, y = casual, color = workingday)) +
+  geom_point() +
+  geom_line(aes(y = .pred))
+```
+Reasoning: I believe the reason why the line isn't straight is because what we did with date. We altered it to be separate so as a result made many small linear lines. 
+
+
+```{r}
+augment(linreg_model, new_data = train) %>% 
+  ggplot(aes(x = casual, y = .pred, color = workingday)) +
+  geom_abline() +
+  geom_point(alpha = .5) +
+  coord_obs_pred()
+```
+
+
+
+
+
+
+
+
+
+Circumstance does model typically predict too high: when coord_obs_pred is made up of points where they have a trend upwards.
+
+Circumstances does the model typically predict too low: when coord_obs_pred is made up of points where they have a trend downwards.
+
+```{r}
+augment(linreg_model, rides_2011_with_split_marked) %>% 
+  group_by(split) %>% 
+  #summarize(mae = mean(abs(casual - .pred)))
+  mae(truth = casual, estimate = .pred)
+```
+
+
+
+On days that the model had not seen, the predicted number of rides was equal to that of the test and the margin wasnt that different.
+
+
+```{r}
+dtree_model <- fit(
+  decision_tree(mode = "regression"),
+  model_formula, data = train)
+```
+
+```{r}
+dtree_model %>%
+  extract_fit_engine() %>% 
+  rpart.plot(roundint = FALSE, digits = 3, type = 4)
+```
+If i choose a cold Friday on April, I would have 8.1% because its colder then 13.1, its a weekend and is the month of April
+
+```{r}
+augment(dtree_model, new_data = train) %>% 
+  ggplot(aes(x = casual, y = .pred, color = workingday)) +
+  geom_abline() +
+  geom_point(alpha = .5) +
+  coord_obs_pred()
+
+```
+
+The horizontal line appears here because we are using coord_obs_pred() which takes the whole of the obsrvations and finds a linear trend
+
+```{r}
+augment(dtree_model, rides_2011_with_split_marked) %>% 
+  group_by(split) %>% 
+  #summarize(mae = mean(abs(casual - .pred)))
+  mae(truth = casual, estimate = .pred)
+```
+
+The performance of this models differs sightly because it is more horizontally grouped then the graph above which is more distributed wildly.
+
+
+```{r}
+rf_model <-
+  rand_forest(mode = "regression") %>%
+  fit(model_formula, data = train)
+boost_model <- fit(
+  boost_tree(mode = "regression"),
+  model_formula, data = train)
+```
+
+
+because the tree depended on the results of the previous trees.
+
+
+```{r}
+augment(rf_model, new_data = train) %>% 
+  ggplot(aes(x = casual, y = .pred, color = workingday)) +
+  geom_abline() +
+  geom_point(alpha = .5) +
+  coord_obs_pred()
+```
+
+
+```{r}
+augment(boost_model, new_data = train) %>% 
+  ggplot(aes(x = casual, y = .pred, color = workingday)) +
+  geom_abline() +
+  geom_point(alpha = .5) +
+  coord_obs_pred()
+```
+```{r}
+# As an aside, here's a way to use a function to represent what's in common between these plots.
+# It uses an advanced tidyverse technique: https://dplyr.tidyverse.org/articles/programming.html#indirection
+show_obs_vs_pred <- function(model, data, var, ...) {
+  augment(model, new_data = data) %>% 
+    ggplot(aes(x = {{var}}, y = .pred, ...)) +
+    geom_abline() +
+    geom_point(alpha = .5) +
+    coord_obs_pred()
+}
+show_obs_vs_pred(rf_model, train, casual, color = workingday)
+show_obs_vs_pred(boost_model, train, casual, color = workingday)
+```
+
+
+
+
+
+
+```{r}
+eval_dataset <- rides_2011_with_split_marked
+
+all_predictions <- bind_rows(
+  linreg_model = augment(linreg_model, new_data = eval_dataset),
+  dtree_model = augment(dtree_model, new_data = eval_dataset),
+  rf_model = augment(rf_model, new_data = eval_dataset),
+  boost_model = augment(boost_model, eval_dataset),
+  .id = "model"
+) %>% mutate(model = as_factor(model))
+```
+
+
+
+
+
+```{r}
+all_predictions %>% 
+  group_by(model, split) %>% 
+  mae(truth = casual, estimate = .pred) %>% 
+  mutate(mae = .estimate) %>% 
+  ggplot(aes(x = model, y = mae, fill = split)) +
+    geom_col(position = "dodge")
+```
+
+Models that over fit: Linear_model, dtree_model, and boast_model
+
+Models that under fit:RF_model
+
+
+best training model: RF_model
+worst training model: boost_model
+
+```{r}
+daily_rides %>% ggplot(aes(x = casual, y = year)) + geom_boxplot()
+
+```
+The Daily distribution for 2012 is so larger then the one located in 2011.
+
+
+```{r}
+eval_dataset <- daily_rides %>% 
+  mutate(split = year)
+
+all_predictions <- bind_rows(
+  linreg_model = augment(linreg_model, new_data = eval_dataset),
+  dtree_model = augment(dtree_model, new_data = eval_dataset),
+  rf_model = augment(rf_model, new_data = eval_dataset),
+  boost_model = augment(boost_model, eval_dataset),
+  .id = "model"
+) %>% mutate(model = as_factor(model))
+
+
+all_predictions %>% 
+  group_by(model, split) %>% 
+  mae(truth = casual, estimate = .pred) %>% 
+  mutate(mae = .estimate) %>% 
+  ggplot(aes(x = model, y = mae, fill = split)) +
+    geom_col(position = "dodge")
+```
+
+I would say that we had a false pretense about what our dataset can do and we must address it by getting up to date data.

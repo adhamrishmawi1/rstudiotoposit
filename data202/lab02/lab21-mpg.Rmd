@@ -1,0 +1,107 @@
+---
+title: "Lab 2.1 - The MPG Dataset<sup>*</sup>"
+author: "Adham Rishmawi"
+date: "Fall 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this document, we explore the MPG dataset provided in the TidyVerse package. It will follow the model of the lab 1.2 exploration of the Seattle Pets dataset.
+
+## Loading the MPG Dataset
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+
+```{r message=FALSE}
+mpg
+```
+
+Start with a *code chunk* that loads the TidyVerse package and displays a summary of the structure and contents of the `mpg` dataset. Then include the following:
+
+- this has a description of all the types of cars with displacement,year,cyclinders, trans.etc...
+-  The hyperlink is here: [MPG](https://ggplot2.tidyverse.org/reference/mpg.html)
+
+## Reading and Writing Files
+
+The MPG dataset is pre-loaded in the TidyVerse package, but we could save it to a file and reload it from there. 
+
+```{r message=FALSE}
+mpg %>%
+  write_csv(file = "data/mpg.csv")
+```
+
+Create a `data` sub-directory for this lab and save the MPG dataset in CSV format. To do this, include a code chunk that uses the *pipe* operator to pass the `mpg` dataset object into a call to the `write_csv()` *function*. You can find a specification of this function in Rstudio&rsquo; Data import cheat sheet (in RStudio, choose *Help*→*Cheat Sheets*→*Browse cheat sheets* and search for &ldquo;Data import with readr&rdquo;). This code chunk will likely include some rather ugly message output, which you can suppress by adding `message=FALSE` to the code chunk header.
+
+We can now read the MPG dataset back in from the file.
+
+```{r message=FALSE}
+mpg_data <- read_csv("data/mpg.csv")
+mpg_data
+```
+
+
+Include a code chunk that reads the CSV file you just wrote and assigned the input to a new object with an appropriate *name*. Display the structure of this re-read dataset and list the differences, if any, you see between it and the original MPG dataset.
+
+differences: the csv file was guessing the type of each column where as the original file associated with the right type
+## Including Images
+
+RMarkdown allows us to include images.
+
+![Rmarkdown](https://cs.calvin.edu/courses/info/601/resources/images/rmarkdown-logo.png)
+
+
+Include RMarkdown code to include the RMarkdow logo found here `https://cs.calvin.edu/courses/info/601/resources/images/rmarkdown-logo.png`.
+
+## Using Equations and Inline Code
+
+RMarkdown also allows us to include equations and inline code computations. For example, Einstein&rsquo;s famous equation, $e = mc^2$, tells us that given the speed of light (29979245800 cm/second), the energy stored in a mass of 1 gram is: `r 1 * 29979245800**2`. (Yep, that&rsquo;s a pretty big number.)
+
+```{r}
+mean(mpg$cty)
+mean(mpg$hwy)
+```
+
+Include a statement here that computes the mean city and highway MPG values. You can compute the mean using the `mean()` function and you can access the city and highway MPG value vectors using `mpg$cty` and `mpg$hwy`.
+
+## Using the Intermediate Data Types
+
+This document has already includes Tibbles (e.g., `mpg`), a particularly useful version of the standard data frame used to store datasets. The other data types we&rsquo;ll use in the course include Dates and Factors.
+
+A *date* is a special type used to represent date-times. For example, it is currently `r lubridate::now()`. Dates can be manipulated using the `lubridate` package. 
+
+```{r}
+lubridate::make_date(year =1999)
+lubridate::make_date(year =1998)
+lubridate::make_date(year =1997)
+```
+
+Use the `lubridate::make_date(year = ??)` function to convert the MPG year variable into a date value. This will assume that the month and day are January 1.
+
+A *factor* is a special type of *vector* used to represent categorical data values. For example, though the drive variable in the MPG dataset is represented as a character, it&rsquo;s probably best seen as a value from a short list of possible categories: 'f', '4', &hellip; 
+
+```{r}
+as.factor(mpg$cty)
+as.factor(mpg$hwy)
+```
+
+Convert the MPG drive vector into a factor using the `as.factor()` function. What are the values for this variable in the dataset and what do they stand for?
+
+## Exploring the Data
+
+```{r}
+str_detect(mpg$manufacturer,"dodge",)
+  str_count(mpg$manufacturer,"dodge")
+```
+
+this detects the amount of dodges that were tested and i have test here to prove that there was 37 dodges
+
+Include one query of the dataset here that shows something interesting. Include the R code, its output, and your interpretation of the results.
+
+<hr>
+<sup>*</sup>Exercise based on [Data Science in a Box](https://datasciencebox.org/)

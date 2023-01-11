@@ -1,0 +1,123 @@
+---
+title: "DATA 202 Homework 3"
+author: "Adham Rishmawi"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    code_download: yes
+---
+
+```{r setup, include=FALSE}
+# Set some useful chunk options for code chunks.
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,    # display errors but keep going.
+  comment = "",    # don't add '##' characters before output.
+  message = FALSE  # don't include messages in the knitted output (check them in RStudio)
+  )
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+
+```{r}
+dennys <- read_rds("data/dennys.rds")
+laquinta <- read_rds("data/laquinta.rds")
+states <- read_csv("data/states.csv", col_types = cols(
+  name = col_character(),
+  abbreviation = col_character(),
+  area = col_double()
+))
+```
+
+
+```{r}
+dn_ak <- dennys %>%
+  filter(state == "AK")
+nrow(dn_ak)
+```
+1.there are 3 locations in Alaska (Dennys)
+
+```{r}
+lq_ak <- laquinta %>%
+  filter(state == "AK")
+nrow(lq_ak)
+```
+2.there are 2 locations in Alaska (laquinta)
+
+```{r question 3}
+dn_lq_ak <- full_join(dn_ak, lq_ak, by = "state", suffix = c("_dn", "_lq"))
+dn_lq_ak
+```
+
+4. How many observations are in the joined dn_lq_ak data frame? What are the names of the variables in this data frame. :
+
+the .x has to come from the x data and .y came from the second the full_join call. The reason for two different .y and .x is because there was a similar column in both and the system had to differentiate between them!
+
+5. Add a new variable, called distance to the dn_lq_ak data frame that contains the distances between each Denny’s and La Quinta locations. Make sure to save the result back to dn_lq_ak so that you can use it later.
+```{r}
+# Great-circle distance, Implementation from dsbox
+haversine <- function(long1, lat1, long2, lat2) {
+  # convert to radians
+  long1 = long1 * pi / 180
+  lat1  = lat1  * pi / 180
+  long2 = long2 * pi / 180
+  lat2  = lat2  * pi / 180
+  
+  # Earth mean radius in km (WGS84 ellipsoid)
+  R = 6371.009
+  
+  # Compute the distance in km
+  a = sin((lat2 - lat1)/2)^2 + cos(lat1) * cos(lat2) * sin((long2 - long1)/2)^2
+  d = R * 2 * asin(sqrt(a))
+  return(d)
+}
+```
+
+```{r}
+dn_lq_ak|>
+  mutate(distance = haversine(longitude_dn,latitude_dn,longitude_lq,latitude_lq))
+```
+
+
+
+6.
+```{r}
+dn_lq_ak_mindist <- dn_lq_ak %>%
+  group_by(address_lq) %>%
+  summarise(min(dn_lq_ak$distance))
+dn_lq_ak_mindist
+  
+```
+7. There are 3 la Quinta locations near Dennys and they are in Anchorage(2),Fairbanks
+
+8.
+```{r}
+lq_ak1 <- laquinta %>%
+  filter(state == "MI")
+nrow(lq_ak1)
+```
+
+```{r}
+dn_ak1 <- dennys %>%
+  filter(state == "MI")
+nrow(dn_ak1)
+```
+```{r}
+dn_lq_ak1 <- full_join(dn_ak1, lq_ak1, by = "state", suffix = c("_dn", "_lq"))
+dn_lq_ak1
+```
+```{r}
+dn_lq_ak1|>
+  mutate(distance = haversine(longitude_dn,latitude_dn,longitude_lq,latitude_lq))
+```
+
+```{r}
+dn_lq_ak_mindist1 <- dn_lq_ak1 %>%
+  group_by(address_lq) %>%
+  summarise(closest = min(dn_lq_ak1$distance))
+```
+the data from Michigan shows that there are way more locations od dennys/laquinta that are near each other
+
+(r wasnt working correctly but i know this code works by working on personal r)

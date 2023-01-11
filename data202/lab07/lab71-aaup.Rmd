@@ -1,0 +1,217 @@
+---
+title: "Lab 7.1 - Faculty Hiring Patterns"
+author: "Adham Rishmawi"
+date: "Spring 2022"
+output:
+  pdf_document: default
+  html_document:
+    code_download: yes
+---
+
+```{r setup, include = FALSE}
+# Set some useful chunk options for code chunks.
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,    # display errors but keep going.
+  comment = "",    # don't add '##' characters before output.
+  message = FALSE  # don't include messages in the knitted output (check them in RStudio)
+  )
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+This document explores the claim that universities are increasingly hiring more part-time faculty and less full-time faculty. It starts with a rather poorly designed plot, which shows the trend but only at the cost of some considerable effort on the part of the reader, and improves the visualization, which shows the trend more clearly.
+
+## Analysing the Original Visualization
+
+The American Association of University Professors (AAUP), a nonprofit membership association of faculty and other academic professionals, created [this report](https://www.aaup.org/sites/default/files/files/AAUP_Report_InstrStaff-75-11_apr2013.pdf). The report discusses trends in instructional staff employees between 1975 and 2011, and contains a visualization very similar to this one:
+
+![Instructional staff employment trends](https://cs.calvin.edu/courses/info/601/07tidy/lab/images/staff-employment.png){width="700px"}
+
+
+Analyze this plot: what type of plot is it? What variables are mapped to what aesthetics? What is easy to see, what is hard to see?
+  This is a multiple series horizontal bar graph with x variables of incriminates of 5 and y axis of different type of jobs. the colors tell us the different years and it very difficult to differentiate between them because it visual hard to distinguish. 
+
+## Designing Alternate Visualizations
+
+
+Sketch on paper two alternative designs for this plot that might do a better job of illustrating the hiring levels different types of faculty over time. Describe the alternatives in the same way as you just did above (type, aesthetic mappings) and explain how they might be improvements of the original.
+1. face-it multiple bar graphs with face-its of different occupations. This would make it more visual easier to distinguish the years and retain the orginality of concept.
+2.horizontal line graphs with each line being associated with a different occupation type and the x axis being the incriminates of 5.Then you could create a face-it of each year since it is reasonable small and would ealborate precise differences in occupations. 
+
+## Rebuilding the Visualization
+
+We now update the visualization incrementally, starting with an approximation of the original.
+
+### 1. Reproduce the original plot.
+```{r}
+staff1 <- read_csv("https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional-staff.csv")
+staff3 <- pivot_longer(staff1, cols = 2:12, names_to = "year", values_to = "percentage")
+```
+
+
+Remake the original plot, starting with [this dataset](https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional-staff.csv) and trying to make it look as follows.
+
+```{r}
+hired_staff <- read_csv("https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional-staff.csv")
+hired_staff|>
+  pivot_longer(-faculty_type, names_to = "year", values_to = "percentage")|>
+  ggplot() +
+  aes(x = percentage, y = faculty_type, fill = year) +
+  geom_col(position = "dodge") +
+  scale_fill_viridis_d() +
+  labs(x="% of faculty",
+       y = "",
+       fill = "",
+       title = "Instruction staff employment trends, 1975-2011",
+       caption = "Source: AAUP")
+```
+
+
+
+![aaup-1](https://cs.calvin.edu/courses/info/601/07tidy/lab/images/aaup-1.png)
+
+Notes:
+
+- The dataset will need to be pivoted, so that you have columns for `faculty_type`, `year`, and `percentage`.
+- Use a column chart with dodged bars (`geom_col(position = "dodge")`).
+- Use the Viridis color scale (`scale_fill_viridis_d()`)
+- Include labels (`labs()`) for: `x`, `y`, `fill`, `title`, `caption`
+
+### 2. Convert to a stacked bar plot.
+
+We'd like to more directly compare the hiring levels of the different faculty types.
+
+
+Update the plot to look like this.
+
+![aaup-2](https://cs.calvin.edu/courses/info/601/07tidy/lab/images/aaup-2.png)
+
+```{r}
+hired_staff <- read_csv("https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional-staff.csv")
+hired_staff|>
+  pivot_longer(-faculty_type, names_to = "year", values_to = "percentage")|>
+  ggplot() +
+  aes(x = percentage, y = year, fill = faculty_type) +
+  geom_col() +
+  scale_fill_viridis_d() +
+  labs(x="% of faculty",
+       y = "",
+       fill = "",
+       title = "Instruction staff employment trends, 1975-2011",
+       caption = "Source: AAUP")
+```
+
+
+
+Notes:
+
+- See if you can do this without repeating the `pivot_longer`.
+- We used `theme_minimal()`.
+
+### 3. Convert to a line plot.
+
+Line plots tend to be good for view values over time.
+
+
+Update the plot to look like this.
+
+![aaup-3](https://cs.calvin.edu/courses/info/601/07tidy/lab/images/aaup-3.png)
+
+Notes:
+
+- Note the use of a redundant encoding (`shape`). I had to add a `geom_point` layer to draw those.
+- Make sure that the year is treated `as.numeric`.
+- If you made changes to earlier code, make sure your earlier plots still work. (You may need to replace `year` with `factor(year)` in those plots, depending on how you did it.)
+
+```{r}
+hired_staff <- read_csv("https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional-staff.csv")
+hired_staff|>
+  pivot_longer(-faculty_type, names_to = "year", values_to = "percentage")|>
+  ggplot() +
+  aes(x = as.numeric(year), color = faculty_type, y = percentage) +
+  geom_line() +
+  geom_point()+
+  scale_fill_viridis_d() +
+  labs(y="% of faculty",
+       x = "year",
+       fill = "",
+       title = "Instruction staff employment trends, 1975-2011",
+       caption = "Source: AAUP")
+```
+MY GRAPH DID OVER ALL YEARS RATHER THEN UPPER 2000's
+
+### 4. Just show the numbers.
+
+Sometimes, simply displaying numbers is as effective as visualizing them. Here are the changes in hiring levels, i.e., the 2011 percentage minus the 1975 percentage.
+
+
+First do it the easy way, starting with `staff`. Tip: `2011` isn't normally a valid variable name, but you can use backticks (next to the 1 key): `` `2011` ``.
+Once you get that, can you do it starting with your *long*-format data? (you'll need to pivot) Can you do it without using `select()`? 
+```{r}
+staff2 <- hired_staff |>
+  select("faculty_type", "1975", "2011")|>
+  mutate(change = `2011` - `1975`)
+staff2
+```
+```{r}
+staff4 <-staff3 |>
+  pivot_wider(names_from = "year", values_from = "percentage")|>
+  group_by(`faculty_type`,`1975`,`2011`)|>
+  mutate(change = `2011`-`1975`)
+knitr::kable(staff4)
+```
+
+<table>
+<thead>
+<tr class="header">
+<th align="left">faculty_type</th>
+<th align="right">1975</th>
+<th align="right">2011</th>
+<th align="right">change</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Full-Time Tenured Faculty</td>
+<td align="right">29.0</td>
+<td align="right">16.7</td>
+<td align="right">-12.3</td>
+</tr>
+<tr class="even">
+<td align="left">Full-Time Tenure-Track Faculty</td>
+<td align="right">16.1</td>
+<td align="right">7.4</td>
+<td align="right">-8.7</td>
+</tr>
+<tr class="odd">
+<td align="left">Full-Time Non-Tenure-Track Faculty</td>
+<td align="right">10.3</td>
+<td align="right">15.4</td>
+<td align="right">5.1</td>
+</tr>
+<tr class="even">
+<td align="left">Part-Time Faculty</td>
+<td align="right">24.0</td>
+<td align="right">41.3</td>
+<td align="right">17.3</td>
+</tr>
+<tr class="odd">
+<td align="left">Graduate Student Employees</td>
+<td align="right">20.5</td>
+<td align="right">19.3</td>
+<td align="right">-1.2</td>
+</tr>
+</tbody>
+</table>
+
+
+Notes:
+- You can format the table by piping the resulting dataframe through `knitr::kable()`.
+
+## Drawing Conclusions
+
+
+In conclusion, are universities hiring more part-time faculty and less full-time faculty? Why might this be?
+
+They are hiring more part-time faculty because they don't need that many full timers instead they need more diverse and less invested individuals possibly because it is more cost effective.

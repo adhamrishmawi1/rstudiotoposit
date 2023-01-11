@@ -1,0 +1,490 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Lab 7.1 - Faculty Hiring Patterns},
+  pdfauthor={Adham Rishmawi},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Lab 7.1 - Faculty Hiring Patterns}
+\author{Adham Rishmawi}
+\date{Spring 2022}
+
+\begin{document}
+\maketitle
+
+This document explores the claim that universities are increasingly
+hiring more part-time faculty and less full-time faculty. It starts with
+a rather poorly designed plot, which shows the trend but only at the
+cost of some considerable effort on the part of the reader, and improves
+the visualization, which shows the trend more clearly.
+
+\hypertarget{analysing-the-original-visualization}{%
+\subsection{Analysing the Original
+Visualization}\label{analysing-the-original-visualization}}
+
+The American Association of University Professors (AAUP), a nonprofit
+membership association of faculty and other academic professionals,
+created
+\href{https://www.aaup.org/sites/default/files/files/AAUP_Report_InstrStaff-75-11_apr2013.pdf}{this
+report}. The report discusses trends in instructional staff employees
+between 1975 and 2011, and contains a visualization very similar to this
+one:
+
+\begin{figure}
+\centering
+\includegraphics[width=7.29167in,height=\textheight]{https://cs.calvin.edu/courses/info/601/07tidy/lab/images/staff-employment.png}
+\caption{Instructional staff employment trends}
+\end{figure}
+
+Analyze this plot: what type of plot is it? What variables are mapped to
+what aesthetics? What is easy to see, what is hard to see? This is a
+multiple series horizontal bar graph with x variables of incriminates of
+5 and y axis of different type of jobs. the colors tell us the different
+years and it very difficult to differentiate between them because it
+visual hard to distinguish.
+
+\hypertarget{designing-alternate-visualizations}{%
+\subsection{Designing Alternate
+Visualizations}\label{designing-alternate-visualizations}}
+
+Sketch on paper two alternative designs for this plot that might do a
+better job of illustrating the hiring levels different types of faculty
+over time. Describe the alternatives in the same way as you just did
+above (type, aesthetic mappings) and explain how they might be
+improvements of the original. 1. face-it multiple bar graphs with
+face-its of different occupations. This would make it more visual easier
+to distinguish the years and retain the orginality of concept.
+2.horizontal line graphs with each line being associated with a
+different occupation type and the x axis being the incriminates of
+5.Then you could create a face-it of each year since it is reasonable
+small and would ealborate precise differences in occupations.
+
+\hypertarget{rebuilding-the-visualization}{%
+\subsection{Rebuilding the
+Visualization}\label{rebuilding-the-visualization}}
+
+We now update the visualization incrementally, starting with an
+approximation of the original.
+
+\hypertarget{reproduce-the-original-plot.}{%
+\subsubsection{1. Reproduce the original
+plot.}\label{reproduce-the-original-plot.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{staff1 }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional{-}staff.csv"}\NormalTok{)}
+\NormalTok{staff3 }\OtherTok{\textless{}{-}} \FunctionTok{pivot\_longer}\NormalTok{(staff1, }\AttributeTok{cols =} \DecValTok{2}\SpecialCharTok{:}\DecValTok{12}\NormalTok{, }\AttributeTok{names\_to =} \StringTok{"year"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"percentage"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Remake the original plot, starting with
+\href{https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional-staff.csv}{this
+dataset} and trying to make it look as follows.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{hired\_staff }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional{-}staff.csv"}\NormalTok{)}
+\NormalTok{hired\_staff}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{faculty\_type, }\AttributeTok{names\_to =} \StringTok{"year"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"percentage"}\NormalTok{)}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ percentage, }\AttributeTok{y =}\NormalTok{ faculty\_type, }\AttributeTok{fill =}\NormalTok{ year) }\SpecialCharTok{+}
+  \FunctionTok{geom\_col}\NormalTok{(}\AttributeTok{position =} \StringTok{"dodge"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_viridis\_d}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x=}\StringTok{"\% of faculty"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{""}\NormalTok{,}
+       \AttributeTok{fill =} \StringTok{""}\NormalTok{,}
+       \AttributeTok{title =} \StringTok{"Instruction staff employment trends, 1975{-}2011"}\NormalTok{,}
+       \AttributeTok{caption =} \StringTok{"Source: AAUP"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{lab71-aaup_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+\begin{figure}
+\centering
+\includegraphics{https://cs.calvin.edu/courses/info/601/07tidy/lab/images/aaup-1.png}
+\caption{aaup-1}
+\end{figure}
+
+Notes:
+
+\begin{itemize}
+\tightlist
+\item
+  The dataset will need to be pivoted, so that you have columns for
+  \texttt{faculty\_type}, \texttt{year}, and \texttt{percentage}.
+\item
+  Use a column chart with dodged bars
+  (\texttt{geom\_col(position\ =\ "dodge")}).
+\item
+  Use the Viridis color scale (\texttt{scale\_fill\_viridis\_d()})
+\item
+  Include labels (\texttt{labs()}) for: \texttt{x}, \texttt{y},
+  \texttt{fill}, \texttt{title}, \texttt{caption}
+\end{itemize}
+
+\hypertarget{convert-to-a-stacked-bar-plot.}{%
+\subsubsection{2. Convert to a stacked bar
+plot.}\label{convert-to-a-stacked-bar-plot.}}
+
+We'd like to more directly compare the hiring levels of the different
+faculty types.
+
+Update the plot to look like this.
+
+\begin{figure}
+\centering
+\includegraphics{https://cs.calvin.edu/courses/info/601/07tidy/lab/images/aaup-2.png}
+\caption{aaup-2}
+\end{figure}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{hired\_staff }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional{-}staff.csv"}\NormalTok{)}
+\NormalTok{hired\_staff}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{faculty\_type, }\AttributeTok{names\_to =} \StringTok{"year"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"percentage"}\NormalTok{)}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ percentage, }\AttributeTok{y =}\NormalTok{ faculty\_type, }\AttributeTok{fill =}\NormalTok{ year) }\SpecialCharTok{+}
+  \FunctionTok{geom\_col}\NormalTok{(}\AttributeTok{position =} \StringTok{"fill"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_viridis\_d}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x=}\StringTok{"\% of faculty"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{""}\NormalTok{,}
+       \AttributeTok{fill =} \StringTok{""}\NormalTok{,}
+       \AttributeTok{title =} \StringTok{"Instruction staff employment trends, 1975{-}2011"}\NormalTok{,}
+       \AttributeTok{caption =} \StringTok{"Source: AAUP"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{lab71-aaup_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+Notes:
+
+\begin{itemize}
+\tightlist
+\item
+  See if you can do this without repeating the \texttt{pivot\_longer}.
+\item
+  We used \texttt{theme\_minimal()}.
+\end{itemize}
+
+\hypertarget{convert-to-a-line-plot.}{%
+\subsubsection{3. Convert to a line
+plot.}\label{convert-to-a-line-plot.}}
+
+Line plots tend to be good for view values over time.
+
+Update the plot to look like this.
+
+\begin{figure}
+\centering
+\includegraphics{https://cs.calvin.edu/courses/info/601/07tidy/lab/images/aaup-3.png}
+\caption{aaup-3}
+\end{figure}
+
+Notes:
+
+\begin{itemize}
+\tightlist
+\item
+  Note the use of a redundant encoding (\texttt{shape}). I had to add a
+  \texttt{geom\_point} layer to draw those.
+\item
+  Make sure that the year is treated \texttt{as.numeric}.
+\item
+  If you made changes to earlier code, make sure your earlier plots
+  still work. (You may need to replace \texttt{year} with
+  \texttt{factor(year)} in those plots, depending on how you did it.)
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{hired\_staff }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"https://cs.calvin.edu/courses/info/601/07tidy/lab/data/instructional{-}staff.csv"}\NormalTok{)}
+\NormalTok{hired\_staff}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{faculty\_type, }\AttributeTok{names\_to =} \StringTok{"year"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"percentage"}\NormalTok{)}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \FunctionTok{as.numeric}\NormalTok{(year), }\AttributeTok{color =}\NormalTok{ faculty\_type, }\AttributeTok{y =}\NormalTok{ percentage) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{()}\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_viridis\_d}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\StringTok{"\% of faculty"}\NormalTok{,}
+       \AttributeTok{x =} \StringTok{"year"}\NormalTok{,}
+       \AttributeTok{fill =} \StringTok{""}\NormalTok{,}
+       \AttributeTok{title =} \StringTok{"Instruction staff employment trends, 1975{-}2011"}\NormalTok{,}
+       \AttributeTok{caption =} \StringTok{"Source: AAUP"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{lab71-aaup_files/figure-latex/unnamed-chunk-4-1.pdf} MY
+GRAPH DID OVER ALL YEARS RATHER THEN UPPER 2000's
+
+\hypertarget{just-show-the-numbers.}{%
+\subsubsection{4. Just show the numbers.}\label{just-show-the-numbers.}}
+
+Sometimes, simply displaying numbers is as effective as visualizing
+them. Here are the changes in hiring levels, i.e., the 2011 percentage
+minus the 1975 percentage.
+
+First do it the easy way, starting with \texttt{staff}. Tip:
+\texttt{2011} isn't normally a valid variable name, but you can use
+backticks (next to the 1 key):
+\texttt{\textasciigrave{}2011\textasciigrave{}}. Once you get that, can
+you do it starting with your \emph{long}-format data? (you'll need to
+pivot) Can you do it without using \texttt{select()}?
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{staff2 }\OtherTok{\textless{}{-}}\NormalTok{ hired\_staff }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{select}\NormalTok{(}\StringTok{"faculty\_type"}\NormalTok{, }\StringTok{"1975"}\NormalTok{, }\StringTok{"2011"}\NormalTok{)}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{change =} \StringTok{\textasciigrave{}}\AttributeTok{2011}\StringTok{\textasciigrave{}} \SpecialCharTok{{-}} \StringTok{\textasciigrave{}}\AttributeTok{1975}\StringTok{\textasciigrave{}}\NormalTok{)}
+\NormalTok{staff2}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tibble: 5 x 4
+  faculty_type                       `1975` `2011` change
+  <chr>                               <dbl>  <dbl>  <dbl>
+1 Full-Time Tenured Faculty            29     16.7  -12.3
+2 Full-Time Tenure-Track Faculty       16.1    7.4   -8.7
+3 Full-Time Non-Tenure-Track Faculty   10.3   15.4    5.1
+4 Part-Time Faculty                    24     41.3   17.3
+5 Graduate Student Employees           20.5   19.3   -1.2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{staff4 }\OtherTok{\textless{}{-}}\NormalTok{staff3 }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{pivot\_wider}\NormalTok{(}\AttributeTok{names\_from =} \StringTok{"year"}\NormalTok{, }\AttributeTok{values\_from =} \StringTok{"percentage"}\NormalTok{)}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{group\_by}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{faculty\_type}\StringTok{\textasciigrave{}}\NormalTok{,}\StringTok{\textasciigrave{}}\AttributeTok{1975}\StringTok{\textasciigrave{}}\NormalTok{,}\StringTok{\textasciigrave{}}\AttributeTok{2011}\StringTok{\textasciigrave{}}\NormalTok{)}\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{change =} \StringTok{\textasciigrave{}}\AttributeTok{2011}\StringTok{\textasciigrave{}}\SpecialCharTok{{-}}\StringTok{\textasciigrave{}}\AttributeTok{1975}\StringTok{\textasciigrave{}}\NormalTok{)}
+\NormalTok{knitr}\SpecialCharTok{::}\FunctionTok{kable}\NormalTok{(staff4)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.3608}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0515}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 24\tabcolsep) * \real{0.0722}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+faculty\_type
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+1975
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+1989
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+1993
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+1995
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+1999
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2001
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2003
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2005
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2007
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2009
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+2011
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+change
+\end{minipage} \\
+\midrule()
+\endhead
+Full-Time Tenured Faculty & 29.0 & 27.6 & 25.0 & 24.8 & 21.8 & 20.3 &
+19.3 & 17.8 & 17.2 & 16.8 & 16.7 & -12.3 \\
+Full-Time Tenure-Track Faculty & 16.1 & 11.4 & 10.2 & 9.6 & 8.9 & 9.2 &
+8.8 & 8.2 & 8.0 & 7.6 & 7.4 & -8.7 \\
+Full-Time Non-Tenure-Track Faculty & 10.3 & 14.1 & 13.6 & 13.6 & 15.2 &
+15.5 & 15.0 & 14.8 & 14.9 & 15.1 & 15.4 & 5.1 \\
+Part-Time Faculty & 24.0 & 30.4 & 33.1 & 33.2 & 35.5 & 36.0 & 37.0 &
+39.3 & 40.5 & 41.1 & 41.3 & 17.3 \\
+Graduate Student Employees & 20.5 & 16.5 & 18.1 & 18.8 & 18.7 & 19.0 &
+20.0 & 19.9 & 19.5 & 19.4 & 19.3 & -1.2 \\
+\bottomrule()
+\end{longtable}
+
+faculty\_type
+
+1975
+
+2011
+
+change
+
+Full-Time Tenured Faculty
+
+29.0
+
+16.7
+
+-12.3
+
+Full-Time Tenure-Track Faculty
+
+16.1
+
+7.4
+
+-8.7
+
+Full-Time Non-Tenure-Track Faculty
+
+10.3
+
+15.4
+
+5.1
+
+Part-Time Faculty
+
+24.0
+
+41.3
+
+17.3
+
+Graduate Student Employees
+
+20.5
+
+19.3
+
+-1.2
+
+Notes: - You can format the table by piping the resulting dataframe
+through \texttt{knitr::kable()}.
+
+\hypertarget{drawing-conclusions}{%
+\subsection{Drawing Conclusions}\label{drawing-conclusions}}
+
+In conclusion, are universities hiring more part-time faculty and less
+full-time faculty? Why might this be?
+
+They are hiring more part-time faculty because they don't need that many
+full timers instead they need more diverse and less invested individuals
+possibly because it is more cost effective.
+
+\end{document}

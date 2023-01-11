@@ -1,0 +1,91 @@
+---
+title: "DATA 202 Homework 4"
+author: "Adham Rishmawi"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    code_download: yes
+---
+
+```{r setup, include=FALSE}
+# Set some useful chunk options for code chunks.
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,    # display errors but keep going.
+  comment = "",    # don't add '##' characters before output.
+  message = FALSE  # don't include messages in the knitted output (check them in RStudio)
+  )
+library(tidyverse)
+library(mosaic)
+library(broom)
+theme_set(theme_bw())
+```
+
+###Excercise 1
+
+
+a. because 27.2 is the average of all ages when gestation occurs so 27 is the mean of all those numbers not when the average age when bgestation occurs.
+b.Gestation is a period of time when the baby is developing so the statement insinuates that 27.2 is when birth occurs which is false assuming it is discussing average age when birth occurs.
+
+
+
+###Excercise 2
+```{r}
+gestation_no_missing <- mosaicData::Gestation %>% filter(!is.na(age))
+mean(~ age, data = gestation_no_missing)
+
+
+set.rseed(123)
+bootstrap <-
+  do(1000) * df_stats(~ age, data = resample(gestation_no_missing),
+                      mean, long_names = TRUE)
+ci_stats <- cdata(~ mean_age, data = bootstrap, p = 0.95)
+ci_stats
+```
+
+Because for the 95% samples from the population, the coinfidence interval we compute will contain the true mean. Bootstrap resampling is when we pretend that our sample is the actually population and resampling from that fake population. The mean is a composition of the average of histogram values so it makes sense that the intervals falls in the middle to balance out the numbers that skew right and left
+
+
+
+### Excercise 3
+
+```{r A.}
+model <- gf_point(wt ~ gestation, data = gestation_no_missing)
+```
+
+```{r B.}
+slr <- lm(wt ~ gestation, 
+          data = gestation_no_missing)
+
+gf_point(wt ~ gestation, 
+         data = gestation_no_missing) |> 
+  gf_lm()
+```
+```{r C.}
+summary(slr)
+```
+The goal of a confidence interval method is to have the coverage rate to be equal to the confidence level. So this means that the confidence interval method is to be correct 95% of the time. Gestation has low coefficient of 0.405 and a high coefficient of 0.5226169 this mean the mean of gestation occurs between those intervals at confidence level of 95%.
+
+
+```{r}
+alr <- lm(wt ~ age, 
+          data = gestation_no_missing)
+
+gf_point(wt ~ age, 
+         data = gestation_no_missing) |> 
+  gf_lm()
+
+coef(alr)
+
+```
+
+
+This tells us the age of the mother did not influence the average weight of child and it stayed fairly consistent! 
+
+
+
+
+
+
+

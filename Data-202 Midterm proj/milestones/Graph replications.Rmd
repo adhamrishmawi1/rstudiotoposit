@@ -1,0 +1,209 @@
+---
+title: "DATA 202 Homework X"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_download: true
+---
+
+```{r setup, include=FALSE}
+# Set some useful chunk options for code chunks.
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,    # display errors but keep going.
+  comment = "",    # don't add '##' characters before output.
+  message = FALSE  # don't include messages in the knitted output (check them in RStudio)
+  )
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+```{r load-data}
+covid_data <- read_csv("data/owid-covid-data.csv")
+new_covid_date <- covid_data %>% 
+  mutate(date = lubridate::dmy(date))
+
+head(new_covid_date)
+```
+
+```{r continent: Europe}
+location_list <- list("France", "Germany", "Italy", "Russia", "Poland")
+
+europe <- new_covid_date %>% 
+  select(continent, location, date, new_cases) %>% 
+  filter(continent == "Europe") %>% 
+  filter(location %in% location_list)
+```
+
+```{r continent: Asia}
+aslocation_list <- list("China", "India", "Indonesia", "Pakistan", "Bangladesh")
+
+asia <- new_covid_date %>% 
+  select(continent, location, date, new_cases) %>% 
+  filter(continent == "Asia") %>% 
+  filter(location %in% aslocation_list)
+```
+
+```{r continent: Africa}
+aflocation_list <- list("Algeria", "Egypt", "Libya", "Ethiopia", "Nigeria")
+
+africa <- new_covid_date %>% 
+  select(continent, location, date, new_cases) %>% 
+  filter(continent == "Africa") %>% 
+  filter(location %in% aflocation_list)
+```
+
+```{r}
+salocation_list <- list("Brazil", "Colombia", "Argentina", "Peru", "Chile")
+
+southamerica <- new_covid_date %>% 
+  select(continent, location, date, new_cases) %>% 
+  filter(continent == "South America") %>% 
+  filter(location %in% salocation_list)
+
+
+```
+
+```{r}
+olocation_list <- list("Papua New Guinea", "New Zealand", "Fiji", "Solomon Islands", "French Polynesia")
+
+oceania <- new_covid_date %>% 
+  select(continent, location, date, new_cases) %>% 
+  filter(continent == "Oceania") %>% 
+  filter(location %in% olocation_list)
+```
+
+
+
+```{r}
+africa|>
+  filter(between(date,as.Date('2021-04-28'), as.Date('2021-05-09'))) |>
+  ggplot() +
+  #coord_flip() +
+  aes(x = date, y = new_cases, fill = location) +
+  geom_col(position = "dodge") +
+  scale_fill_viridis_d() +
+  scale_fill_brewer(palette = "GnBu") +
+  theme_dark() +
+  theme(legend.position="top") +
+   labs(x="Dates from April 28th - May 9th \n 2021",
+       y = "Total New Cases",
+       fill = "Locations",
+       title = "Daily New Cases from selected countries in Africa",
+       subtitle = "Algeria, Egypt, Nigeria, Ethiopia, Libya" ,
+       caption = "Source: OWID")
+  
+```
+```{r}
+
+
+asia|>
+  filter(between(date,as.Date('2020-04-28'), as.Date('2020-05-09'))) |>
+  ggplot() +
+  #coord_flip() +
+  aes(x = date, y = new_cases, fill = location) +
+  geom_col(position = "dodge") +
+  scale_fill_viridis_d() +
+  scale_fill_brewer(palette = "PuRd") +
+  theme_dark() +
+  theme(legend.position="top") +
+  labs(x="Dates from April 28th - May 9th \n 2021",
+       y = "Total New Cases",
+       fill = "Locations",
+       title = "Daily New Cases from selected countries in Asia",
+       subtitle = "Bangladesh, China, India, Indonesia, Pakistan",
+       caption = "Source: OWID")
+```
+```{r}
+oceania|>
+  filter(between(date,as.Date('2021-01-20'), as.Date('2021-01-25'))) |>
+  ggplot() +
+  #coord_flip() +
+  aes(x = date, y = new_cases, fill = location) +
+  geom_col(position = "dodge") +
+  scale_fill_viridis_d() +
+  scale_fill_brewer(palette = "OrRd") +
+  theme_dark() +
+  theme(legend.position="top") +
+   labs(x="Dates from Janurary 20th-25th \n 2020",
+       y = "Total New Cases",
+       fill = "Locations",
+       title = "Daily New Cases from selected countries in Oceania",
+       subtitle = "Papua New Guinea, New Zealand, Fiji, Solomon Islands, French Polynesia" ,
+       caption = "Source: OWID")
+  
+```
+
+
+```{r}
+southamerica|>
+  filter(between(date,as.Date('2022-01-20'), as.Date('2022-01-25'))) |>
+  ggplot() +
+  #coord_flip() +
+  aes(x = date, y = new_cases, fill = location) +
+  geom_col(position = "dodge") +
+  scale_fill_viridis_d() +
+  scale_fill_brewer(palette = "YlGn") +
+  theme_dark() +
+  theme(legend.position="top") +
+   labs(x="Dates from Janurary 20th-25th \n 2022",
+       y = "Total New Cases",
+       fill = "Locations",
+       title = "Daily New Cases from selected countries in South America",
+       subtitle = "Peru, Colombia, Chile, Brazil, Argentina " ,
+       caption = "Source: OWID")
+
+```
+```{r}
+europe|>
+  filter(between(date,as.Date('2020-09-20'), as.Date('2020-09-25'))) |>
+  ggplot() +
+  #coord_flip() +
+  aes(x = date, y = new_cases, fill = location) +
+  geom_col(position = "dodge") +
+  scale_fill_viridis_d() +
+  scale_fill_brewer(palette = "PuBuGn") +
+  theme_dark() +
+  theme(legend.position="top") +
+   labs(x="Dates from Sept 20th-25th \n 2021",
+       y = "Total New Cases",
+       fill = "Locations",
+       title = "Daily New Cases from selected countries in Europe",
+       subtitle = "France, Germany, Italy, Poland, Russia" ,caption = "Source: OWID")
+```
+
+
+
+###interesting data graph
+
+
+```{r}
+europe|>
+  filter(between(date,as.Date('2021-06-02'), as.Date('2021-07-09'))) |>
+  ggplot() +
+  #coord_flip() +
+  aes(x = date, y = new_cases, fill = location) +
+  facet_wrap(~location, scales = "free_y") +
+  geom_area(color="darkred") +
+  scale_fill_viridis_d() +
+  #scale_fill_brewer(palette = "GnBu") +
+  theme_dark() +
+  theme(legend.position="top") +
+   labs(x="Dates from June 2th - July 9th \n 2021",
+       y = "Total New Cases",
+       fill = "Locations",
+       title = "Daily New Cases from selected countries in Europe",
+       subtitle = "France, Germany, Italy, Poland, Russia" ,
+       caption = "Source: OWID")
+  
+```
+
+
+
+
+
+
+
+
+

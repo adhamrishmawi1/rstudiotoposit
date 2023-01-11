@@ -1,0 +1,88 @@
+---
+title: "Stat 245 -- Draft Graphics"
+author: "Misgana, Aubrey, Daniel, Adham"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+    fig_height: 2.2
+    fig_width: 4
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+```{r, setup, include = FALSE}
+# load packages that are going to be used
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = FALSE) # don't print warnings or messages in compiled document. So you MUST check them in RStudio!
+```
+
+
+### Loading in the Different Datasets:
+
+```{r message=FALSE}
+Work_order1 <- read_csv("Work-order org/work_order.csv")
+Work_order2 <- read_csv("Work-order org/work_order2.csv")
+Work_order3 <- read_csv("Work-order org/work_order3.csv")
+Intsprod <- read_csv("Intsprod_dtc_azure.csv")
+Vinpin <- read_csv("VINPINdata.csv")
+Azure <- read_csv("Azure_D20-60X.csv")
+```
+
+```{r}
+mutate(Work_order1, FAILURE_DATE = lubridate::ymd(FAILURE_DATE))
+```
+
+
+### Exploratory Graph 1:
+First, let's figure out which machines caused the most number of errors over the last few years.
+```{r error count in a month}
+# This explores how many times the drill had an error in a month.
+Work_order1 |>
+  #filter(between(order(FAILURE_DATE), as.Date('2018-01-05'), as.Date('2021-02-07'))) |>
+  ggplot() +
+  aes(x = MODEL, y = count(FAILURE_DATE)) +
+  geom_col() +
+  scale_fill_viridis_d() +
+  theme_gray() +
+  labs(
+    title = "Exploratory Graph 1",
+    x = "Type of Drill",
+    y = "Count of Errors (To Decimal)"
+  )
+```
+
+```{r}
+```
+
+### Exploratory Graph 2:
+
+```{r}
+Work_order1 |> 
+  mutate(Work_order1, FAILURE_DATE = lubridate::ymd(FAILURE_DATE)) |> 
+  filter(MODEL == "D24X40III") |> 
+  ggplot(aes(x=FAILURE_DATE))+
+  geom_histogram()
+  
+```
+
+
+
+
+
+
+  

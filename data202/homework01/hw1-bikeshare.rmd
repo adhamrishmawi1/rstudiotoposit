@@ -1,0 +1,84 @@
+---
+title: "Data 202 -- HW 01"
+author: "Adham Rishmawi"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+    fig_height: 2.2
+    fig_width: 4
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+Spring 2022
+```{r, setup, include = FALSE}
+# load packages that are going to be used
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = FALSE) # don't print warnings or messages in compiled document. So you MUST check them in RStudio!
+```
+
+
+##### the purpose of this program is to detect the optimal amount of rental bikes in each area for maxium effiecency and avoid delays for the customer.
+
+
+###### This is data in relevance to the issue at hand (2011-2012)
+
+
+```{r}
+bikedata <- read_csv('~/data202/homework01/bikeshare-day-simple.csv', show_col_types = FALSE)
+bikedata
+```
+this data set has 731 observations/occurrences and has 4 different variables at hand:
+$date
+
+$day_of_week
+
+$workingday
+
+$total_rides
+
+```{r}
+bikedata %>%
+  ggplot() +
+  aes(x = date, y = total_rides) +
+  geom_point() +
+  geom_smooth() +
+  labs(
+    x = "date", 
+    y = "number of rides"
+  )
+```
+
+
+
+```{r}
+bikedata %>%
+  ggplot() +
+  aes(x = date, y = total_rides, col = workingday) +
+  geom_point() +
+  geom_smooth() +
+  labs(
+    x = "date", 
+    y = "number of rides"
+  )
+```
+
+
+
+
+interpretation: it seems like captialbike share's bikes are in more demand throughout the weekdays meaning that their products should be more in stock in the weekdays than the weekends!
+  

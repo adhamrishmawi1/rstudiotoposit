@@ -1,0 +1,66 @@
+---
+title: "Stat 245 -- Graphics: Nepharious Consultant Request"
+author: "Adham Rishmawi"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+    fig_height: 6
+    fig_width: 10
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+```{r, setup, include = FALSE}
+# load packages that are going to be used
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = FALSE) # don't print warnings or messages in compiled document. So you MUST check them in RStudio!
+```
+
+
+```{r}
+nefarious <- read_csv('https://sldr.netlify.app/data/nefarious.csv')
+```
+
+```{r}
+gf_dens(~total_nefarious | race, color = ~age_group, data = nefarious)|>
+  gf_labs(title = "Graph A: Asian, younger consultants face more
+          presuure to do unethical stats")
+```
+i feel like this graph achieves a better illustration because with gf_density it is harder to identify which age_group is being potrayed because of the overlapping. I believe the illustration here is at its better form.
+
+
+
+```{r}
+gf_histogram(~race, fill = ~age_group, data= nefarious, stat = "count") |>
+  gf_labs(title = 'Graph B: Most surveyed consultants were old and white')
+```
+
+I believe this histogram consolidates the information needed from each age group and is overall, better visually.
+
+
+```{r}
+gf_point(total_nefarious ~ age_group | sex, 
+         data = nefarious,
+         color = ~total_nefarious) |>
+  gf_labs (title = 'Graph C: Females, Males face similar numbers of requests but younger consultants face more')
+```
+
+with this one I believed the only issue resided in the fact that humans struggle to encapsulate volume so i shifted the size to color so that it would be easier to differentiate total_nefariousness
+
+
+  

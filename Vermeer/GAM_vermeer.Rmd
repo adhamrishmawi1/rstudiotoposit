@@ -1,0 +1,492 @@
+---
+title: "Stat 245 -- Vermeer Project"
+author: "Adham Rishmawi, Aubrey Williams, Daniel Kwik, Misgana Dinberu"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+  html_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+```{r, setup, include = FALSE}
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  cache = TRUE,
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = TRUE, fig.path = "Vermeer/updatedfigures2", dev = "png", dpi = 300) 
+```
+
+
+## Project Question
+
+#### Background
+Vermeer Corporation has provided us datasets to help answer statistical questions that might be useful for them. The project question is open and the team was given autonomy on what to do with the data. There are two types of datasets provided to us. The first was Telematics data, machine codes that machines would send that contained information about any machine failure. The second is repair data, data about repair jobs being done on machines when it is sent in for repair.
+
+#### Question we chose
+
+Because the Vermeer Corporation was interested more in the business case, we decided to choose a response variable that we think would be most useful to help reduce cost, namely the number of repairs of a given machine. The logic we started with is if we can figure out what variables best predict higher counts of repairs, Vermeer can take steps to fix those things and deliver value to their customers and dealers.
+
+Question we chose: Which variables are most strongly associated with the number of repairs of a given machine?
+
+We were able to wrangle a final dataset (`summary_by_machine`) with the available variables to test for, given the constraints of time and resource in data wrangling:
+
+-The length of time between a machine's failure, and when it was repaired.
+
+-The total count of indicator lamps turned on (notification, amber, red, malfunction)
+
+-The model of machine
+
+-The number of hours machine was running for before it broke down
+
+Hypothesis: Out of all these variables, we hypothesize that the number of machine hours, length of time between breakdown and repair, and count of 'malfunction' indicator lights are the predictors that are most strongly associated with the number of repairs on a given machine. In our final dataset, these predictors are `max_machine_hours`, `down_time`, and `n_malfunction` respectively, and our response variable is `n_work_orders` - the number of repairs of a given machine.
+
+Logic:
+-Machines hours: The longer the machine runs for, the greater the depreciation of machine parts, the more often in needs to be repaired.
+-Down time: The longer we wait before repairing a machine, the more mechanical problems can accumulate, leading to higher number of reapirs
+-Malfunction lamp: The most severe lamp status (malfunction), as opposed to notification, amber, and red will likely predict higher repairs.
+
+## Wrangling:
+
+These are the six data sets we will be using. We have loaded up the data and included a glimpse into them to see what there is.
+
+```{r loading in vinpin}
+vinpin_data <- read_csv("VINPINdata.csv")
+glimpse(vinpin_data)
+```
+
+```{r loading in the different drills}
+# This loads in all the different drills D20X-60X.
+azure_D20X_60X <- read_csv("Azure_D20-60X.csv")
+glimpse(azure_D20X_60X)
+```
+
+```{r loads in one of the three work orders}
+work_order1 <- read_csv("Work-order org/work_order.csv")
+glimpse(work_order1)
+```
+
+```{r loads in the second work order}
+work_order2 <- read_csv("Work-order org/work_order2.csv")
+glimpse(work_order2)
+```
+
+```{r loads in the third work order}
+work_order3 <- read_csv("Work-order org/work_order3.csv")
+glimpse(work_order3)
+```
+
+## Prepare and Merge
+
+There is a need to merge these datasets together, and we will do this using the machine VIN as a unique identifier between datasets.
+
+Steps:
+
+- Append VIN to the Azure (telematics) datasets using AssetID as the connection
+- Group Azure datasets by VIN and summarize the variables (all the indicator lights) by count
+- Group WorkOrder by VIN and summarize number of repairs by number of observations (i.e number of repair jobs done)
+- Inner join the grouped Azure dataset onto the grouped WorkOrder dataset
+
+### Append VIN to the Azure (telematics) datasets using AssetID as the connection
+ 
+```{r azure-plus-vins}
+azure_with_vin <- azure_D20X_60X |>
+  left_join(vinpin_data |> select(assetId, `VIN/PIN`), 
+            by = c('AssetId' = 'assetId')) |> 
+    separate(name, into = c('model', NA), sep = ':', remove = FALSE)
+
+```
+  
+### Group Azure datasets by VIN and summarize the variables (all the indicator lights) by count
+
+```{r azure summary final}
+azure_summary <- azure_with_vin |>
+  group_by(`VIN/PIN`) |>
+  summarise(n_red = sum(LAMPSTATUS == "RED", na.rm = TRUE),
+            n_amber = sum(LAMPSTATUS == 'AMBER', na.rm = TRUE),
+            n_notification = sum(LAMPSTATUS == 'NOTIFICATION', na.rm = TRUE),
+            n_malfunction = sum(LAMPSTATUS == 'MALFUNCTION', na.rm = TRUE),
+            model = first(model)
+
+  ) |>
+  ungroup()
+```
+
+###  Group WorkOrder by VIN and summarize number of repairs by number of observations (i.e number of repair jobs done)
+
+```{r summarize-work-orders}
+all_work_orders <- bind_rows(work_order1, work_order2, work_order3) |> 
+  mutate(down_time = difftime(lubridate::dmy(REPAIR_DATE),
+                              lubridate::dmy(FAILURE_DATE),
+                              units = 'days'),
+         down_time = as.numeric(down_time))
+
+work_order_summary <- all_work_orders |>
+  group_by(IDENTIFICATION) |>
+  summarise(n_work_orders = n(),
+            median_down_time = median(down_time, na.rm = TRUE),
+            max_machine_hours = max(MACHINE_HOURS, na.rm = TRUE))
+  
+```
+
+### Inner join the grouped Azure dataset onto the grouped WorkOrder dataset
+
+```{r one-row-per-machine}
+summary_by_machine <- 
+  inner_join(work_order_summary, azure_summary, 
+            by = c("IDENTIFICATION" = "VIN/PIN"))
+glimpse(summary_by_machine)
+```
+
+Now: There aren't *any* NAs in `work_order_summary` so NAs in the `n_...` columns should actually be 0s: no downtime, no work order at all. So to fill those in:
+
+```{r correct-zeros}
+summary_by_machine <- summary_by_machine |>
+  # in columns from n_work_orders to median_down_time,
+  mutate(across(c(n_work_orders : median_down_time), 
+                # replace NAs with  0s
+                ~replace_na(.x, replace = 0))) 
+
+glimpse(summary_by_machine)
+  
+```
+
+
+```{r}
+#filter out anomalous cases
+summary_by_machine <- summary_by_machine|> 
+ filter(max_machine_hours < 99999)
+```
+
+
+#### Interpretation: This our final data set. The final data set holds the columns:
+`Identification`: vin of the specific machine 
+
+`n_work_orders`: count of number of repairs done (our response variable)
+
+`max_machine_hours`: The total number of hours the machine has been running for since its commissioning.
+
+`median_down_time`: median of the downtime (difference of repair date and failure date)
+
+`n_red`: this is the count of the red lamp status
+
+`n_amber`: this is the count of the amber lamp status.
+
+`n_notification`: this is the count of the notification lamp status.
+
+`n_malfunction`: this is the count of the malfunction lamp status.
+
+`model`: the model name of the machine
+
+## Exploratory Graphs
+
+Let's check out the number of observations for each type of model
+
+```{r exploratory graph one, fig.width = 6, fig.height = 6}
+summary_by_machine |> 
+  group_by(model) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x=model, y=count))+
+  geom_bar(stat = 'identity')+
+  theme(axis.text.x = element_text(angle = 90))|>
+    gf_theme(axis.text.x=element_text(angle=65, hjust=1))
+```
+Right away we see that we have the most data for the models D24X40III, D23X30III, D20X22III, and D40X55III, and the other models have few observations comparatively. 
+
+Next, let's see the relationship between number of machine hours and the number of repairs.
+
+```{r exploratory graph two, fig.width = 6, fig.height = 6}
+#Plot histogram of mean machine hours 
+ggplot(summary_by_machine, aes(x=max_machine_hours, y=n_work_orders))+
+  geom_point(alpha = 0.2) + 
+  xlim(c(0,1000)) +
+  ylim(c(0,400))+
+  ylab('Total number of Repairs')+
+  xlab('Number of machine hours')
+  
+```
+
+We see that generally, the higher the number of machine horus, the higher the total number of repairs. This seems logical, although the relationship does not seem extremely strong (lots of spread). There is also a dense cluster of machines with low machine hours, and low repairs. This means that a lot of our data come from machines that haven't been running for very long.
+
+Next let's see the the number of observations broken down by model and machine hours.
+
+```{r exploratory graph three, fig.height= 6, fig.width=6, warning=FALSE}
+ggplot(summary_by_machine)+
+  aes(x=max_machine_hours) +
+  geom_histogram() + 
+  xlim(c(0,1000)) +
+  ylim(c(0,100))+
+  facet_wrap(~model)+
+  ylab('Total Number of Observations')+
+  xlab('Machine hours')
+  
+```
+
+We see that what we observed about the dense cluster of machines with low hours and low repairs is explained by the above graph. Generally, across all model types, we have more observations of machines that have less hours, indicated by the downward trend in the histogram.
+
+Next, let's explore how our indicator lamp status (notification, amber, red, malfunction) behaves with the number of repairs.
+
+```{r exploratory graph four, fig.height= 6, fig.width=8, warning=FALSE}
+summary_by_machine |> 
+  select(c('IDENTIFICATION', 'n_work_orders', 'n_red', 'n_amber', 'n_notification', 'n_malfunction', 'model')) |> 
+  pivot_longer(c(n_red,n_amber,n_notification,n_malfunction),
+               names_to = 'indicator_light_color',
+               values_to = 'indicator_light_count') |> 
+    ggplot(aes(x= indicator_light_count, y=n_work_orders, color = indicator_light_color))+
+  geom_point(alpha = 0.2)+
+  facet_wrap(~indicator_light_color)+
+  ylab('Total Number of Repairs')+
+  labs(colour = "Light Color") +
+  xlab('Total number of times indicator light was lit')
+```
+
+From this graph we see that the red, notification, and amber lights behave similarly to one another. However, the malfunction light behaves very differently. It is clear that even when the count of malfunction lights are low, it is associated with high numbers of repairs. This intuitively makes sense since malfunction is the highest severity of indicator lamp status.
+
+Let's plot this graph and break it down by model to see if this is behavior is model-specific:
+
+```{r exploratory graph five, fig.width= 8, fig.height= 4}
+summary_by_machine |> 
+  select(c('IDENTIFICATION', 'n_work_orders', 'n_red', 'n_amber', 'n_notification', 'n_malfunction', 'model')) |> 
+  pivot_longer(c(n_red,n_amber,n_notification,n_malfunction),
+               names_to = 'indicator_light_color',
+               values_to = 'indicator_light_count') |> 
+    ggplot(aes(x= indicator_light_count, y=n_work_orders, color = indicator_light_color))+
+  geom_point(alpha = 0.2)+
+  facet_wrap(~model) +
+  xlab('Total number of times indicator light was lit') +
+    labs(colour = "Light Color") +
+  ylab('Total number of repairs')
+```
+
+From this graph, we see that indicator lights generally behave consistently across all models. I.e there is nothing extremely outof the ordinary we can observe here that shows that a specific model behaves differently than others with regards to how it's indicator light correlates with the number of repairs.
+
+Finally, let's see the relationship of median days waited before repairing and the total number of repairs:
+
+```{r fig.height = 6, fig.width = 6}
+#Plot histogram of mean machine hours 
+ggplot(summary_by_machine, aes(x=median_down_time, y =n_work_orders))+
+  geom_point(alpha = 0.2) + 
+  xlim(c(0,100)) +
+  ylab('Total number of Repairs')+
+  xlab('Median amount of days waited before repairs')
+```
+
+
+This graph shows that there seems to be a an upward trend between 0-12 days, where waiting longer in this bracket leads to significantly more repairs. After the 12 days, the spike mysteriously goes down and tails off. It seems that machines that (on average) are sent into repairs within the bands of 8-15 days are associated with the highest number of repairs.
+
+
+## Model Fitting:
+
+We started off with trying to fit a linear negative binomial regression model to model the number of repairs, since it is count data. However, we found that our mean-variance condition and independence of residuals condition fails:
+
+```{r}
+#fitting a linear negative binomial regression model
+library(glmmTMB)
+
+machine_nb2 <- glmmTMB(n_work_orders ~ max_machine_hours + median_down_time + n_red + n_amber + n_notification + n_malfunction + model,
+                       data = summary_by_machine,
+                       family = nbinom2(link = "log"))
+```
+
+### Failed Mean-Variance Relationship:
+
+```{r fig.height = 6, fig.width = 6}
+library(DHARMa)
+
+nb2_sim <- simulateResiduals(machine_nb2)
+plotResiduals(nb2_sim,
+              quantreg = FALSE)
+```
+
+
+The scaled-dharma residuals is not uniformly spread vertically, so this condition fails.
+
+### Independence of Residuals:
+
+```{r}
+s245::gf_acf(~machine_nb2) %>% 
+  gf_lims(y = c(-1,1))
+```
+
+There is a spike at lag 4, so condition fails.
+
+Circling back to our data, we plotted our response and predictors on individual plots and found that it looked like our predictors were behaving non-linearly to our response, as seen in the 'r' like relationship below:
+
+## Why we didn't use a linear model
+
+```{r}
+loglin1 <- gf_point(log(n_work_orders) ~ max_machine_hours, data = summary_by_machine, alpha = 0.2) |> 
+  gf_labs(
+    x = "Machine hours",
+    y = "Log of number of work orders"
+  )
+
+loglin2 <- gf_point(log(n_work_orders) ~ median_down_time, data = summary_by_machine, alpha = 0.2) |> 
+  gf_labs(
+    x = "Median number of days waited before repairs",
+    y = "Log of number of work orders"
+  )
+
+loglin3 <- gf_point(log(n_work_orders) ~ model, data = summary_by_machine, alpha = 0.2) |> 
+  gf_labs(
+    x = "Model",
+    y = "Log of number of work orders"
+  ) |> 
+    gf_theme(axis.text.x=element_text(angle=65, hjust=1))
+
+loglin4 <- gf_point(log(n_work_orders) ~ n_red, data = summary_by_machine, alpha = 0.2) |> 
+  gf_labs(
+    x = "Number of red indicator lights",
+    y = "Log of number of work orders"
+  )
+
+loglin5 <- gf_point(log(n_work_orders) ~ n_amber, data = summary_by_machine, alpha = 0.2) |> 
+  gf_labs(
+    x = "Number of amber indicator lights",
+    y = "Log of number of work orders"
+  )
+
+loglin6 <- gf_point(log(n_work_orders) ~ n_notification, data = summary_by_machine, alpha = 0.2) |> 
+  gf_labs(
+    x = "Number of notification indicator lights",
+    y = "Log of number of work orders"
+  )
+
+loglin7 <- gf_point(log(n_work_orders) ~ n_malfunction, data = summary_by_machine, alpha = 0.2) |> 
+  gf_labs(
+    x = "Number of malfunction indicator lights",
+    y = "Log of number of work orders"
+  )
+```
+
+```{r fig.width=10, fig.height=10}
+require(ggpubr)
+ggarrange(loglin1,loglin2,loglin3,loglin4,loglin5,loglin6,loglin7,
+          ncol = 3, nrow = 3
+          )
+```
+
+Thus, we decided to pivot to model a generalized additive model instead with smooths on all predictors in order to account for the non-linear trend.
+
+## Fitting the Model:
+
+```{r}
+library(glmmTMB)
+require(mgcv)
+
+machine_nb1 <- gam(n_work_orders ~ s(max_machine_hours, k = 6, bs = 'cs') + s(median_down_time, k = 6, bs = 'cs') + s(n_red, k=6, bs = 'cs') + s(n_amber, k = 6, bs = 'cs') + s(n_notification, k=6, bs = 'cs') + s(n_malfunction, k = 6, bs = 'cs') + model,
+                       data = summary_by_machine,
+                   method = 'ML',
+                   select = TRUE,
+                   family = nb(link = 'log'))
+
+```
+
+
+## Model summary
+```{r}
+summary(machine_nb1)
+```
+
+
+## Model Assessment:
+
+Here, we can see that our GAM model helps solve some of the failed model assessment conditions we had. Both our mean-variance relationship tests and indpendence of residuals tests look good!
+
+### Mean-Varince Relationship:
+
+```{r fig.height = 6, fig.width = 7}
+library(DHARMa)
+
+nb1_sim <- simulateResiduals(machine_nb1)
+plotResiduals(nb1_sim,
+              quantreg = FALSE)
+```
+
+DHARMA scaled residuals are evenly spread vertically.
+
+### Independence of Residuals:
+
+```{r fig.height = 6, fig.width = 6}
+s245::gf_acf(~machine_nb1) %>% 
+  gf_lims(y = c(-1,1))
+```
+
+The ACF plot shows that all the lags are within our confidence bounds.
+
+### Model Selection
+
+Now that our model assessments have passed, we conducted model selection using akaike's information criterion.
+
+```{r}
+library(MuMIn)
+machine_nb1 <- update(machine_nb1, na.action = 'na.fail')
+head(dredge(machine_nb1, rank='AIC'))
+```
+
+#### Interpretation:
+This is our best model based on the predictors of `max_machine_hours`, `model`, & `median_down_time` `n_amber`. 
+
+This fit our hypothesis, but we were surprised that it was the amber indicator light, not the malfunction light that is the best predictor of number of repairs.
+
+We plotted some prediction plots for each of these predictors:
+
+### Prediction Plots
+
+```{r fig.height = 6, fig.width = 6}
+plot(ggeffects::ggpredict(machine_nb1, terms = ('max_machine_hours [n=50]')))|>
+  gf_labs(x = "Machine Hours", y = "Total number of Repairs", title = 'Predicted number of repairs')|>
+  gf_rugx(~max_machine_hours, data = summary_by_machine, inherit = FALSE, alpha = .2)|>
+  gf_lims(x = c(0,4000), y = c(0,250))
+
+```
+
+It seems like there is a somewhat linear relationship between number of hours a machine has been running for and the total number of repairs, between 0 to 1800 hours. After which, there seems to be an easing of the rate at which the number of repairs are increasing. However, we have much fewer data points for that range and there is more uncertainty.
+
+```{r fig.height = 6, fig.width = 6}
+plot(ggeffects::ggpredict(machine_nb1, terms = c('n_amber'))) |> 
+  gf_rugx(~n_amber, data = summary_by_machine, inherit = FALSE, alpha = .2) |> 
+  gf_labs(x = "Count of Amber lights lit", y = "Total number of Repairs", title = 'Predicted number of repairs')|>
+  gf_lims(x = c(0, 1700))
+```
+
+The count of amber lights seem to be linearly increasing with the number of repairs from 0 to about 250, after which it dips down. There is a lot of uncertainty in these predictinos, and we have not been able to explain this trend, but it is certainly something to look further into.
+
+
+```{r fig.height = 5, fig.width = 7}
+plot(ggeffects::ggpredict(machine_nb1, terms = c('model [all]')))+
+  xlab('Machine Model')+
+  ylab('Total number of repairs')+
+  labs(title = 'Predicted number of repairs')
+```
+
+It is clear from this plot that the models that best predict the total number of repairs are D40X55III, followed by D23X30III. Vermeer might look into these models to learn more precisely what are causing these models to fail more often than others.
+
+```{r fig.height = 6, fig.width = 6}
+plot(ggeffects::ggpredict(machine_nb1, terms = c('median_down_time'))) |> 
+  gf_rugx(~median_down_time, data = summary_by_machine, inherit = FALSE, alpha = .2) |> 
+  gf_labs(x = 'Median days waited before repairs', y = 'Number of Repairs', title = 'Predicted Counts of Repairs') |> 
+  gf_lims(x = c(0,100))
+```
+
+Finally, it seems that waiting between 0 to 12 days before repairing is correlated strongly with a steep increase in the number of repairs, about 25%. While we are painting with broad strokes because of the high-level view of our model, we certainly think it would be interesting to investigate further why this is the case. We also would recommend looking further into why there is a dip after 12 days reducing the number of repairs. Whether these variations are explained through policy of repair procedure, or some other factor, we think that it could be useful to mine the data for more insights, perhaps in search of a maximum down time in which machines can be saved from more repairs in the future.
+
+### Conclusion and Future Direction
+
+Overall, our model uses a blunt knife to see how repairs might be correlated to very high level predictors, such as machines, indicator lights, machine hours and down time. We think that doing further investigation into problems in specific model types, and how down time would be a good next step. We also think that the count of indicator lights (amber, red, malfunction and notification) is a weak representation of machine failure, since different combinations of lights can mean different 'categories' of failure (e.g a certain combination of lights can mean an engine failure). Future studies should account for this by taking into account the spn, fmi guides on how combination of lights relate to types of machine failure. This would be a much sharper tool that can help Vermeer make more tangible business decisions.
+
+
+   

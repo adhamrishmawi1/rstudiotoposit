@@ -1,0 +1,130 @@
+---
+title: "Lab 3.2 - Visualization Composition"
+author: "Adham Rishmawi"
+date: "Spring Semester"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(scales)
+library(gapminder)
+```
+
+This document presents some modifications on the health-and-wealth plot.
+
+## Rebuilding the Health-and-Wealth Plot
+Type or copy this code into the following code chunk one line at a time, running the code for each new line to see what it does. We&rsquo;ve started the process for you.
+
+
+Here is the code for the plot shown in class on Wednesday:
+```{r}
+gapminder %>% 
+  filter(year == 2007) %>% 
+  ggplot() +
+  aes(x = gdpPercap, y = lifeExp) +
+  geom_point(alpha = .8) + 
+  aes(color = continent) +
+  aes(size = pop) + 
+  scale_x_continuous(
+    breaks = c(400, 4000, 40000),
+    trans = "log10") +
+  labs(x = "GDP per Capita") +
+  labs(y = "Life Expectancy (years)") +
+  labs(color = "Continent") +
+  labs(size = "Population") +
+  scale_size_area(labels = label_comma()) +
+  theme_bw() + 
+  annotation_logticks(sides = "b")
+```
+
+
+
+Notes:
+
+- You can run the code chuck and see the output in the RStudio editor pane by pressing the green arrow (on the upper right of the chunk).
+
+- Write a comment about what that line does using the `#` comment notation. The first 1.5 comments are written for you (e.g., `# Include only the records where...`).
+  
+- Omit the ` %>% ` (the *pipe* operator) or `+` at the end of a line until you're ready to enter the next line (e.g., you'll need to add `%>%` to the end of the filter line to go on).
+
+- Practice using tab completion and the keyboard shortcut `Ctrl-Shift-M` to enter the ` %>% `.
+    
+- Look up the Help for a few of the functions by clicking on the function name and then pressing the `F1` key.
+  
+- Run the chunk. Observe what changed from what was there before.
+
+## Modifying the Health-and-Wealth Plot
+
+Here is a modified version of the previous plot.
+
+🚧
+```{r more-health-and-wealth}
+gapminder %>% 
+  #this is calling our main dataset and utlizing the pipe operator
+  filter(year == 2002) %>% 
+  #this filters years and onlyuses 2002 year datasheet
+  ggplot() +
+  aes(x = gdpPercap, y = lifeExp, color = continent, size = pop) +
+  #this gives the aes specifications all in one line
+  geom_point(alpha = .8) +
+  scale_x_continuous(
+    breaks = c(400, 4000, 40000),
+    trans = "log10",
+    labels = label_comma()) +
+  #this creates the framework for the graph and refines the lables
+  labs(x = "GDP per Capita",y = "Life Expectancy (years)", color ="Continent", size = "Population") +
+  #this gives the strings for the labels and gives color and volume to country sizes
+  scale_size_area(labels = label_comma()) +
+  #separates labels with commas
+  theme_dark() +
+  #changes the theme of the graph to a darker theme
+  annotation_logticks(sides = "b") +
+  coord_cartesian(ylim = c(40,120))
+  #changes the spread of data across the graph
+```
+<!-- This graph is a better display particularity because of a better theme that makes it visually more appropriate-->
+
+
+
+Duplicate your code chunk here, change its name (e.g., `{r more-health-and-wealth}`), and try these extensions:
+
+ 
+
+- Change the year to your birth year or another interesting year in history. Note: here are the available years:
+
+ 
+
+```{r}
+
+unique(gapminder$year)
+
+```
+
+ 
+
+- Try combining the `aes` lines together into a single `aes` command (with commas between the parts). Then try the same for the `labs`.
+
+ 
+
+- Use commas in the `x` axis labels. (Find the part that adds commas to the `scale` for `area`. Use the same `labels` code in the part that already customizes other aspects of the `scale` for `x`.)
+
+ 
+
+- Modify the scaling range of the y axis by adding this line `coord_cartesian(ylim = c(40, 90)) +` and setting the y limits to something you consider appropriate.
+
+ 
+
+- Try some other [themes](https://ggplot2.tidyverse.org/reference/ggtheme.html). (at least try `theme_gray`, `theme_classic`, and `theme_minimal`).
+
+ 
+
+Be prepared to submit your final RMarkdown file.
+
+ 
+
+<!-- Based on: https://cs.calvin.edu/courses/data/202/21fa/ex/ex02/ex02-plotting-inst.html -->

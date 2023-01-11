@@ -1,0 +1,180 @@
+---
+title: "Stat 245 -- Vermeer Ready-To-Analyze Datasets"
+author: "Adham Rishmawi, Aubrey Williams, Daniel Kwik, Misgana Dinberu"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+    fig_height: 2.2
+    fig_width: 4
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+```{r, setup, include = FALSE}
+# load packages that are going to be used
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = FALSE) # don't print warnings or messages in compiled document. So you MUST check them in RStudio!
+```
+
+### consd 6 azure-datasets 
+```{r}
+# azure_list <- list.files(pattern = "Azure_")
+# 
+# azure_consd <- list()
+#  for(f in c (1:length(azure_list))){
+#    azure_consd[[f]] <- read.csv(azure_list[f])
+#   
+#  }
+# 
+# azure_consd <- bind_rows(azure_consd)
+```
+
+## Playing Catch Up:
+
+These are the six data sets we will be using. I have loaded up the data and included a glimpse into them to see what there is.
+
+```{r loading in vinpin}
+# This loads in the vin-pin numbers
+vinpin_data <- read_csv("VINPINdata.csv")
+glimpse(vinpin_data)
+```
+
+```{r loading in drill codes}
+# This loads in specific data regarding the drill.
+instprod_dtc_drills_azure <- read_csv("Intsprod_dtc_azure.csv")
+glimpse(instprod_dtc_drills_azure)
+```
+
+```{r loading in the different drills}
+# This loads in all the different drills D20X-60X.
+azure_D20X_60X <- read_csv("Azure_D20-60X.csv")
+glimpse(azure_D20X_60X)
+```
+
+```{r loads in one of the three work orders}
+# This loads in a work order which holds all the same information about different drills.
+work_order1 <- read_csv("work_order.csv")
+glimpse(work_order1)
+```
+
+```{r loads in the second work order}
+# This loads in a second work order which holds all the same information about different drills.
+work_order2 <- read_csv("work_order2.csv")
+glimpse(work_order2)
+```
+
+```{r loads in the third work order}
+# # This loads in a third work order which holds all the same information about different drills.
+work_order3 <- read_csv("work_order3.csv")
+glimpse(work_order3)
+```
+
+## Prepare and Merge
+<!-- this section is from Prof DR  on 11/12 -->
+
+Goals:
+
+- Append VIN to the Azure datasets using AssetID as the connection
+- Group Azure datasets by VIN and summarize the variables (all the indicator lights) by count
+- Group WorkOrder by VIN and summarize number of repairs by max(occurence_count)
+- Left join the grouped Azure dataset onto the grouped WorkOrder dataset
+
+### Append VIN to the Azure datasets using AssetID as the connection
+ 
+```{r, azure-plus-vins}
+azure_with_vin <- azure_D20X_60X |>
+  # left_join means resulting dataset will have same rows as 1st input (azure data)
+  # select only assetId and VIN columns b/c name is same in both azure and vin datasets
+  left_join(vinpin_data |> select(assetId, `VIN/PIN`), 
+            # next line needed since name (spelling) of assetId column is not same across datasets
+            by = c('AssetId' = 'assetId'))
+```
+  
+### Group Azure datasets by VIN and summarize the variables (all the indicator lights) by count
+
+```{r}
+azure_summary <- azure_with_vin |>
+  group_by(`VIN/PIN`) |>
+  summarise(total_occurrence_count  = sum(OccurenceCount, na.rm = TRUE),
+            n_red = sum(LAMPSTATUS == "RED", na.rm = TRUE),
+            n_amber = sum(LAMPSTATUS == 'AMBER', na.rm = TRUE),
+            n_red_stop_flash_lamp3 = sum(RedStopFlashLampStatus == 3, na.rm = TRUE),
+            n_red_stop_lamp1 = sum(RedStopLampStatus == 1, na.rm = TRUE)
+            # you can add more summary calculations here
+            # the ones above may or may not be relevant/useful
+            # here, it's not at all clear to me what info you need and want.
+            # you mentioned  "counts of all the indicator lights" but they seem to have status codes 0, 1, 2, 3...
+            # I don't think you want to  just add those up; seems like each number means a different thing
+            # so I was counting number of times a certain variable had a certain value...
+            # there are also columns I don't have any idea what they are so also no idea how to summarize  like Spn, Fmi
+  ) |>
+  ungroup()
+```
+
+###  Group WorkOrder by VIN and summarize number of repairs by max(occurence_count)
+
+```{r, summarize-work-orders}
+# paste together all 3 work order data sets
+all_work_orders <- bind_rows(work_order1, work_order2, work_order3)
+work_order_summary <- all_work_orders |>
+  # you didn't ask for this but in case it's useful: duration of repair
+  mutate(down_time = difftime(lubridate::dmy(REPAIR_DATE),
+                              lubridate::dmy(FAILURE_DATE),
+                              units = 'hours'),
+         down_time = as.numeric(down_time)) |>
+  # now group by machine VIN
+  group_by(IDENTIFICATION) |>
+  # summarise info for all work orders on this machine
+  summarise(n_work_orders = n(),
+            mean_machine_hours = mean(MACHINE_HOURS, na.rm = TRUE),
+            median_machine_hours = median(MACHINE_HOURS, na.rm = TRUE),
+            mean_down_time = mean(down_time, na.rm = TRUE),
+            median_down_time = median(down_time, na.rm = TRUE))
+  
+```
+
+### Left join the grouped Azure dataset onto the grouped WorkOrder dataset
+
+I'm less sure about this: do you want "one case" in your dataset to be one machine?
+
+It might also make sense for it to be one *work order*
+
+But you know better than me!
+
+Here I am finishing creation of dataset with one row per machine.
+
+```{r, one-row-per-machine}
+summary_by_machine <- 
+  left_join(azure_summary, work_order_summary,
+            by = c("VIN/PIN" = "IDENTIFICATION"))
+glimpse(summary_by_machine)
+```
+
+Now: There aren't *any* NAs in `work_order_summary` so NAs in the `n_...` columns should actually be 0s: no downtime, no work order at all. So to fill those in:
+
+```{r, correct-zeros}
+summary_by_machine <- summary_by_machine |>
+  # in columns from n_work_orders to median_down_time,
+  mutate(across(c(n_work_orders : median_down_time), 
+                # replace NAs with  0s
+                ~replace_na(.x, replace = 0)))  
+  
+```
+
+
+  

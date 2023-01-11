@@ -1,0 +1,84 @@
+---
+title: "DATA 202 Homework 4"
+author: "Adham Rishmawi"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    code_download: yes
+---
+
+```{r setup, include=FALSE}
+# Set some useful chunk options for code chunks.
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,    # display errors but keep going.
+  comment = "",    # don't add '##' characters before output.
+  message = FALSE  # don't include messages in the knitted output (check them in RStudio)
+  )
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+
+##importing data
+```{r}
+data1 <- read.csv("~/data202/homework4/country-population.csv")
+data2 <- read.csv("~/data202/homework4/country-codes.csv")
+
+```
+
+
+
+##merging datasets
+```{r}
+joined_data <- merge(data1, data2, by.x = "country", 
+              all.x = TRUE, all.y = FALSE)
+
+```
+
+
+####filtering bad instances
+
+```{r}
+df2 <- joined_data[,!names(joined_data) %in% c("code")]
+
+```
+
+
+
+
+
+
+
+##Query Raw Population Data
+```{r}
+staff4 <-df2 |>
+  group_by(`country`,`X1800`,`X1880`)
+
+```
+ 
+ 
+##Exploring the data
+
+Initial question: do populations in European countries increase at a less rate then Asian countries
+
+
+## plot
+
+We added a column by mutating a new one in and calling it change and making it the difference between the last recorded population and the first recorded
+```{r}
+staff4 <-df2 |>
+  group_by(`country`,`X1800`,`X1880`) |>
+  mutate(change = `X2015`-`X1800`) |>
+  mutate(chnage_upper = `X2015` - `X2010`) |>
+  mutate(change_lower = `X1850` - `X1800`)
+
+staff4
+```
+We Can see that the population increase for a majority of Asian countries has sky rocketed over years and in both sub sections of change_lower and change_higher. This could be due to the fact that Asian countries typically have a larger family size then compared to the ones found in European countries. The change_higher is much smaller in European countries then it is in Asian countries which indicates to the observer of this plot that Asian countries have maintained a higher population in recent years and almost over every year. 
+
+
+
+## Conclusion
+My initial question/statement aligns with the truth and I am able to conclude that Asian countries are increasing faster in population then European countries!

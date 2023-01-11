@@ -1,0 +1,182 @@
+---
+title: "dplyr Demo"
+author: "Keith VanderLinden"
+date: "Spring, 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document demonstrates the key `dplyr` functions in the context of a hotel-bookings dataset.
+
+```{r packages, warning = FALSE, message = FALSE}
+library(tidyverse)
+```
+
+## Dataset: Hotel Bookings
+
+We&rsquo;d like to analyze hotel bookings data from [TidyTuesday Hotels](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-02-11/readme.md). Note that we&rsquo;ve converted the cancellation field into a factor, which will be useful in our analysis.
+
+```{r}
+hotels <- read_csv("data/hotels.csv", 
+    col_types = cols(is_canceled = col_factor(levels = c("0", "1")))
+    )
+glimpse(hotels)
+```
+
+Notes:
+- This dataset is too big to list easily. There are too many:
+  - Rows (i.e., records, observations)
+  - Columns (i.e., fields, variables)
+- To do analysis, we need to "zoom in" on the data of interest.
+- We read the `is_canceled` (stored as a double, values 1-cancelled; 0-not-cancelled) as a factor.
+
+## `dplyr` Provides Data-Wrangling Functions
+
+We now demonstrate some of the basic `dplyr` functions.
+
+### Selecting Columns
+
+The `select()` function allows us to zoom in on particular columns.
+
+```{r}
+hotels %>%
+  select(lead_time, hotel)
+```
+
+Notes:
+- You can add or remove column names.
+
+### Filtering Rows
+
+The `filter()` function allows us to zoom in on particular rows.
+
+```{r}
+hotels %>%
+  filter(hotel == "Resort Hotel") 
+```
+
+Notes:
+- You can add more filter conditions, e.g., `lead_time < 7`)
+- The logical operators are:  `== < <= > >= !=`
+
+### Summarizing Data
+
+The `summarize()` function allows us to compute a variety of descriptive statistics, including counting, measurements of central tendency (e.g., mean, median, quartiles), etc.
+
+```{r}
+hotels %>%
+  summarize(avg_lead_time = mean(lead_time))
+```
+
+Summarize is often used with grouping. Here we count the books in different market segments.
+
+```{r}
+hotels %>%
+  group_by(market_segment) %>%
+  summarize(booking_count = n())
+```
+
+### Arranging Rows
+
+The `arrange()` function allows us to reorder the rows.
+
+```{r}
+hotels %>%
+  group_by(market_segment) %>%
+  summarize(average_lead_time = mean(lead_time)) %>%
+  arrange(desc(average_lead_time))
+```
+
+Notes:
+- Reverse the ordering using `desc()`.
+
+### Mutating Structure
+
+The `mutate()` function allows us to restructure the data.
+
+```{r}
+hotels %>%
+  mutate(num_nights = stays_in_week_nights + stays_in_weekend_nights,
+         week_nights = stays_in_week_nights,
+         weekend_nights = stays_in_weekend_nights
+         ) %>%
+  arrange(desc(lead_time)) %>%
+  select(num_nights,
+         week_nights, 
+         weekend_nights
+         )  
+```
+Notes:
+- We've focused on the data of interest by:
+  - Computing a new field.
+  - Renaming some fields.
+  - Selecting the new/renamed fields.
+- Be careful about ordering the pipelines, e.g., the sorting clause can't go just anywhere.
+
+### Additional Functions
+
+The `distinct()` function removes rows with duplicate values of the given columns.
+
+```{r}
+hotels %>%
+  distinct(hotel) %>%
+  arrange(hotel)
+```
+Note:
+- You can count on lists of fields (e.g., add `market_segment`).
+
+The `count()` function counts the rows.
+
+```{r}
+hotels %>%
+  count(market_segment) 
+```
+
+Notes:
+- `count(X)` is shorthand for `group_by(X) %>% summarize(n = n())`
+
+
+# Using Functions in Combination
+
+As we&rsquo;ve seen above, `dplyr` functions can be used in combination. 
+
+The following `dplyr` pipeline plots counts that `geom_bar()` computes automatically.
+
+```{r}
+# manual pipeline
+hotels %>%
+  group_by(hotel) %>%
+  summarize(count = n()) %>%
+  ggplot() +
+  aes(x = hotel, y = count) %>%
+  geom_col()
+
+# geom_bar only
+hotels %>%
+  ggplot() +
+  aes(x = hotel) + 
+  geom_bar()
+```
+
+The order of the wrangling functions in a script can matter. For example, this script fails:
+
+```{r}
+# Fails
+# hotels %>%
+#   select(hotel, children) %>%
+#   filter(adults == 0)
+
+# Works
+hotels %>%
+  filter(adults == 0) %>%
+  select(hotel, children)
+```
+
+## Summary
+
+`dplyr` provides a variety of data transformation functions that are useful in data wrangling.
+
+See the RStudio [dplyr cheat sheet](https://raw.githubusercontent.com/rstudio/cheatsheets/main/data-transformation.pdf).

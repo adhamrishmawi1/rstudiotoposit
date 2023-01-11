@@ -1,0 +1,194 @@
+---
+title: "ggplot Demo"
+author: "Keith VanderLinden"
+date: "Spring, 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+```
+
+These examples are adapted from [Data Science in a Box](https://datasciencebox.org/).
+
+# Dataset: Lending Club
+
+We use a subset of a dataset of financial loads from [LendingClub](https://www.lendingclub.com/), provided by [OpenIntro](https://www.openintro.org/data/index.php?data=loans_full_schema).
+
+```{r}
+library(openintro)
+
+loans <- loans_full_schema %>%
+  mutate(grade = factor(grade, ordered = TRUE)) %>%
+  select(loan_amount, interest_rate, term, grade, state, annual_income, 
+         homeownership, debt_to_income)
+loans
+```
+
+Here are the characteristics of the data.
+
+Variable         | Type 
+:----------------|:------
+`loan_amount`    |	Numerical, Continuous
+`interest_rate`  |	Numerical, Continuous
+`term`	         |	Numerical, Discrete (lenth in whole months)
+`grade`	         |	Categorical, Ordinal (values A through G)
+`state`          |	Categorical, not Ordinal
+`annual_income`  |	Numerical, Continuous
+`homeownership`	 |	Categorical, not Ordinal (owns, mortgage, rents)
+`debt_to_income` | Numerical, Continuous (Debt-to-income ratio)
+
+## Aesthetics and Geometries
+
+We now demo plots appropriate for different types of data using various combinations of aesthetic and geometric settings.
+
+### Density Plots &amp; Histograms (Univariate, Numerical Data)
+
+Density plots are good for displaying the distribution of a continuous, numerical variable.
+
+```{r}
+loans %>%
+  ggplot() +
+  aes(
+    x = loan_amount,
+    # fill = homeownership,
+    ) +
+  geom_density(adjust = 1.0, 
+               # alpha = 0.5,
+               )
+  # geom_histogram(binwidth = 5000)
+  # facet_wrap(vars(homeownership), nrow = 3)
+```
+
+Demo the following changes:
+- Adjust the *bandwidth*: `geom_density(adjust = X)` for X = 0.5-2.0.
+- Switch to a histogram, which requires *binning* the continuous variable: `geom_histogram(binwidth = X)` for X = 1000-20000.
+- Add a categorical variable: `aes(... fill=homeownership)` (n.b., we couldn't fill with a numerical value).
+
+### Bar &amp; Column Plots (Univariate, Categorical Data)
+
+Bar/Column plots are good for either binned numerical data or categorical data.
+
+```{r}
+loans %>%
+  ggplot() +
+  aes(x = homeownership) +
+  # coord_flip() +
+  geom_bar()
+```
+
+Demo the following changes:
+- Try plotting by state, which gives too many columns. Horizontal bars are better for that. Switch from a col to a bar plot: `+ coord_flip()` or `aes(y=grade)`
+- Ordering is good for contests with winners and losers. Reorder the output using `x = fct_rev(fct_infreq(state))`
+
+### Scatter Plots (Bivariate, Numerical/Numerical Data)
+
+Scatter plots are good for co-variation of numerical variables.
+
+```{r}
+loans %>%
+  # filter(debt_to_income < 100) %>%
+  ggplot() +
+  aes(x = debt_to_income, 
+      y = interest_rate) +
+  geom_point()
+  # geom_hex()
+```
+
+This is an unusual scatter plot with:
+- *overplotting*: Address this by using a hex plot to bin the data.
+- *outliers* (debt-income > 100%): Ignore outliers by filtering them out.
+
+### Time-Series Plots (Bivariate, Numerical/Time Data)
+
+A scatter plot with time on one axis is called a time series plot.
+
+```{r}
+library(gapminder)
+
+gapminder %>%
+  ggplot() + 
+  aes(x=year, y=lifeExp) +
+  geom_smooth()
+```
+
+### Box Plots (Bivariate, Categorical/Numerical Data)
+
+Box plots are good for visualizing the *spread* of numerical variables and *outliers*. They can be used for univariate, numerical data as well. 
+
+```{r}
+loans %>%
+  ggplot() +
+  aes(x=grade,
+      y=interest_rate) +
+  geom_boxplot()
+```
+
+Boxplots show five summary statistics:
+- the median
+- two hinges (1st & 3rd quartiles)
+- two whiskers (an additional 1.5*IQR beyond the hinge)
+And all "outlying" points (individually).
+
+Demo the following changes:
+- Focus first on annual income only to show outliers: `aes(y=annual_income)`
+- Highlight outliers using color: `geom_boxplot(outlier.colour="red")`
+
+### Segmented Bar Plots (Bivariate, Categorical/Categorical Data)
+
+Mosaic plots (mentioned in the text) can be used to show category/category relationships, but they&rsquo;re not supported by ggplot. 
+
+Bar plots can do this as well, but only by filling or faceting.
+
+```{r}
+loans %>%
+  ggplot() +
+  aes(y = homeownership, fill = grade) +
+  geom_bar()
+
+# loans %>%
+#  ggplot() +
+#  aes(y = homeownership, fill = grade) +
+#  geom_bar(position = "fill")
+```
+
+Demo the following changes:
+- To focus on the relative percentages of the whole, use: `geom_bar(position = "fill")`
+- Which form is better for visualizing the relationship between home ownership and loan grade?
+
+### Additional Plot Types
+
+These plot types, some not supported by ggplot, are included here for reference.
+
+#### Ridge Plots (Bivariate, Categorical/Numerical)
+
+```{r}
+library(ggridges)
+
+loans %>%
+  ggplot() + 
+  aes(x = loan_amount, 
+      y = grade, 
+      fill = grade, 
+      color = grade,
+      ) +
+  geom_density_ridges(
+    alpha = 0.5
+    )
+```
+
+
+## Summary
+
+R provides a wide variety of customizable plotting primitives, including:
+- The ggplot2 plots demoed here.
+- Plots provided by other packages, e.g.:
+  - Mosaic plots
+  - Maps
+  - Network graphs
+
+See the RStudio [ggplot cheat sheet](https://raw.githubusercontent.com/rstudio/cheatsheets/main/data-visualization.pdf).

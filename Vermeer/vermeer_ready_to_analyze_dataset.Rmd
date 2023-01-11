@@ -1,0 +1,412 @@
+---
+title: "Stat 245 -- Vermeer Ready-To-Analyze Datasets"
+author: "Adham Rishmawi, Aubrey Williams, Daniel Kwik, Misgana Dinberu"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+    fig_height: 2.2
+    fig_width: 4
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+```{r, setup, include = FALSE}
+# load packages that are going to be used
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  cache = TRUE,
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = FALSE, fig.path = "figures/Vermeer", dev = "png", dpi = 300) # don't print warnings or messages in compiled document. So you MUST check them in RStudio!
+```
+
+```{r eval=FALSE, include=FALSE}
+# azure_list <- list.files(pattern = "Azure_")
+# 
+# azure_consd <- list()
+#  for(f in c (1:length(azure_list))){
+#    azure_consd[[f]] <- read.csv(azure_list[f])
+#   
+#  }
+# 
+# azure_consd <- bind_rows(azure_consd)
+```
+## Project Question
+
+#### Question: Which characteristics are most strongly associated with the number of repairs of a given machine?
+
+Hypothesis: Machine hours, down time, and sum of n_red are the predictors that are most strongly associated with the number of repairs on a given machine which is directly proportional to the amount of money it costs Vermeer to repair them (i.e the higher the machine hours- the higher the number of repairs which in turn affect the amount of money Vermeer has to pay to repair)
+
+
+This is our hypothesis on what variables can predict this:
+
+-The length of time between a machine's failure, and when it was repaired.
+
+-The type / category of machine failure
+
+-The model of machine
+
+-The number of hours machine was running for before it broke down
+
+## Planning Process:
+
+These are the six data sets we will be using. I have loaded up the data and included a glimpse into them to see what there is.
+
+```{r loading in vinpin}
+# This loads in the vin-pin numbers
+vinpin_data <- read_csv("VINPINdata.csv")
+glimpse(vinpin_data)
+```
+
+```{r loading in drill codes}
+# This loads in specific data regarding the drill.
+instprod_dtc_drills_azure <- read_csv("Intsprod_dtc_azure.csv")
+glimpse(instprod_dtc_drills_azure)
+```
+
+```{r loading in the different drills}
+# This loads in all the different drills D20X-60X.
+azure_D20X_60X <- read_csv("Azure_D20-60X.csv")
+glimpse(azure_D20X_60X)
+```
+
+```{r loads in one of the three work orders}
+# This loads in a work order which holds all the same information about different drills.
+work_order1 <- read_csv("Work-order org/work_order.csv")
+glimpse(work_order1)
+```
+
+```{r loads in the second work order}
+# This loads in a second work order which holds all the same information about different drills.
+work_order2 <- read_csv("Work-order org/work_order2.csv")
+glimpse(work_order2)
+```
+
+```{r loads in the third work order}
+# # This loads in a third work order which holds all the same information about different drills.
+work_order3 <- read_csv("Work-order org/work_order3.csv")
+glimpse(work_order3)
+```
+
+## Prepare and Merge
+
+Steps:
+
+- Append VIN to the Azure datasets using AssetID as the connection
+- Group Azure datasets by VIN and summarize the variables (all the indicator lights) by count
+- Group WorkOrder by VIN and summarize number of repairs by max(occurence_count)
+- Left join the grouped Azure dataset onto the grouped WorkOrder dataset
+
+### Append VIN to the Azure datasets using AssetID as the connection
+ 
+```{r azure-plus-vins}
+azure_with_vin <- azure_D20X_60X |>
+  left_join(vinpin_data |> select(assetId, `VIN/PIN`), 
+            # next line needed since name (spelling) of assetId column is not same across datasets
+            by = c('AssetId' = 'assetId')) |> 
+    separate(name, into = c('model', NA), sep = ':', remove = FALSE)
+
+```
+  
+### Group Azure datasets by VIN and summarize the variables
+
+```{r azure summary final}
+azure_summary <- azure_with_vin |>
+  group_by(`VIN/PIN`) |>
+  summarise(n_red = sum(LAMPSTATUS == "RED", na.rm = TRUE),
+            n_amber = sum(LAMPSTATUS == 'AMBER', na.rm = TRUE),
+            n_notification = sum(LAMPSTATUS == 'NOTIFICATION', na.rm = TRUE),
+            n_malfunction = sum(LAMPSTATUS == 'MALFUNCTION', na.rm = TRUE),
+            model = first(model)
+
+  ) |>
+  ungroup()
+```
+
+###  Group WorkOrder by VIN and summarize
+
+```{r summarize-work-orders}
+# paste together all 3 work order data sets
+all_work_orders <- bind_rows(work_order1, work_order2, work_order3) |> 
+    # you didn't ask for this but in case it's useful: duration of repair
+  mutate(down_time = difftime(lubridate::dmy(REPAIR_DATE),
+                              lubridate::dmy(FAILURE_DATE),
+                              units = 'hours'),
+         down_time = as.numeric(down_time))
+
+work_order_summary <- all_work_orders |>
+  # now group by machine VIN
+  group_by(IDENTIFICATION) |>
+  # summarise info for all work orders on this machine
+  summarise(n_work_orders = n(),
+            mean_machine_hours = mean(MACHINE_HOURS, na.rm = TRUE),
+            median_machine_hours = median(MACHINE_HOURS, na.rm = TRUE),
+            mean_down_time = mean(down_time, na.rm = TRUE),
+            median_down_time = median(down_time, na.rm = TRUE),
+            max_machine_hours = max(MACHINE_HOURS, na.rm = TRUE))
+  
+```
+
+### Inner join the grouped Azure dataset onto the grouped WorkOrder dataset
+
+```{r one-row-per-machine}
+summary_by_machine <- 
+  inner_join(work_order_summary, azure_summary, 
+            by = c("IDENTIFICATION" = "VIN/PIN"))
+glimpse(summary_by_machine)
+```
+
+Now: There aren't *any* NAs in `work_order_summary` so NAs in the `n_...` columns should actually be 0s: no downtime, no work order at all. So to fill those in:
+
+```{r correct-zeros}
+summary_by_machine <- summary_by_machine |>
+  # in columns from n_work_orders to median_down_time,
+  mutate(across(c(n_work_orders : median_down_time), 
+                # replace NAs with  0s
+                ~replace_na(.x, replace = 0)))
+
+glimpse(summary_by_machine)
+  
+```
+
+```{r}
+summary_by_machine <- summary_by_machine |> 
+  filter(max_machine_hours < 10000)
+```
+
+
+#### Interpretation: This our final data set. The final data set holds the columns:
+`Identification`: vin/pin of the model 
+
+`n_work_orders`: count of work orders.
+
+`mean_machine_hours`: mean of the machine hours recorded.
+
+`median_machine_hours`: median of the machine hours recorded.
+
+`mean_down_time`: mean of the downtime (difference of repair date and failure date)
+
+`median_down_time`: median of the downtime (difference of repair date and failure date)
+
+`n_red`: this is the count of the red lamp status
+
+`n_amber`: this is the count of the amber lamp status.
+
+`n_notification`: this is the count of the notification lamp status.
+
+`n_malfunction`: this is the count of the malfunction lamp status.
+
+`model`: the model name of the machine
+
+## Exploratory Graphs
+```{r exploratory graph one, fig.width = 10}
+summary_by_machine |> 
+  group_by(model) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x=model, y=count))+
+  geom_bar(stat = 'identity')
+```
+Based on this graph:
+
+```{r exploratory graph two}
+#Plot histogram of mean machine hours 
+ggplot(summary_by_machine, aes(x=mean_machine_hours))+
+  geom_histogram() + 
+  xlim(c(0,1000))
+  
+```
+
+```{r exploratory graph three, fig.width= 6, fig.height= 6}
+#Plot histogram of mean machine hours facet by machine model
+ggplot(summary_by_machine, aes(x=mean_machine_hours))+
+  geom_histogram() + 
+  xlim(c(0,1000)) +
+  ylim(c(0,100))+
+  facet_wrap(~model)+
+  ylab('number of repairs')
+  
+```
+
+
+```{r exploratory graph four, fig.width= 8, fig.height= 4}
+summary_by_machine |> 
+  select(c('IDENTIFICATION', 'n_work_orders', 'n_red', 'n_amber', 'n_notification', 'n_malfunction', 'model')) |> 
+  pivot_longer(c(n_red,n_amber,n_notification,n_malfunction),
+               names_to = 'indicator_light_color',
+               values_to = 'indicator_light_count') |> 
+    ggplot(aes(x= indicator_light_count, y=n_work_orders, color = indicator_light_color))+
+  geom_point(alpha = 0.2)+
+  facet_wrap(~indicator_light_color)
+```
+
+```{r exploratory graph five, fig.width= 8, fig.height= 4}
+summary_by_machine |> 
+  select(c('IDENTIFICATION', 'n_work_orders', 'n_red', 'n_amber', 'n_notification', 'n_malfunction', 'model')) |> 
+  pivot_longer(c(n_red,n_amber,n_notification,n_malfunction),
+               names_to = 'indicator_light_color',
+               values_to = 'indicator_light_count') |> 
+    ggplot(aes(x= indicator_light_count, y=n_work_orders, color = indicator_light_color))+
+  geom_point(alpha = 0.2)+
+  facet_wrap(~model)
+```
+
+
+## Alternative Prepare and Merge
+
+```{r}
+#azure_with_vin <- azure_with_vin |>
+  # extract the model number (part before the :) from the variable "name"
+  # but also keep "name" in the dataset too.
+ # separate(name, into = c('model', NA), sep = ':', remove = FALSE)
+
+```
+  
+## Fitting the Model:
+
+```{r}
+library(glmmTMB)
+
+machine_nb1 <- glmmTMB(n_work_orders ~ max_machine_hours + median_down_time + n_red + n_amber + n_notification + n_malfunction + model,
+                       data = summary_by_machine,
+                       family = nbinom1(link = "log"))
+
+machine_nb2 <- glmmTMB(n_work_orders ~ max_machine_hours + median_down_time + n_red + n_amber + n_notification + n_malfunction + model,
+                       data = summary_by_machine,
+                       family = nbinom2(link = "log"))
+```
+
+
+
+```{r}
+summary(machine_nb1)
+```
+
+```{r}
+summary(machine_nb2)
+```
+
+If you go based off of AIC, negative binomial 2 is too, so, we will be using that dataset.
+
+
+## Model Assessment:
+
+With count data, the data is being assessed over three different topics: the mean-variance relationship, the independence of residuals, and log-linearity.
+
+### Mean Varaince Relationships:
+
+```{r}
+library(DHARMa)
+
+nb2_sim <- simulateResiduals(machine_nb2)
+plotResiduals(nb2_sim,
+              quantreg = FALSE)
+```
+
+### Independence of Residuals:
+
+```{r}
+s245::gf_acf(~machine_nb2) %>% 
+  gf_lims(y = c(-1,1))
+```
+There is some evidence of dependence in the residuals which we haven't been able to account for but it could always be worse so this test doesn't fail
+
+### Log-Linearity:
+
+Check log-linearity condition of predictor-response relationships
+
+```{r}
+loglin1 <- gf_point(log(n_work_orders) ~ median_machine_hours, data = summary_by_machine) |> 
+  gf_labs(
+    x = "median machine hours",
+    y = "Log of number of work orders"
+  )
+```
+
+```{r}
+loglin2 <- gf_point(log(n_work_orders) ~ median_down_time, data = summary_by_machine) |> 
+  gf_labs(
+    x = "median down time",
+    y = "Log of number of work orders"
+  )
+```
+
+```{r}
+loglin3 <- gf_point(log(n_work_orders) ~ model, data = summary_by_machine) |> 
+  gf_labs(
+    x = "median down time",
+    y = "Log of number of work orders"
+  )
+```
+
+```{r}
+loglin4 <- gf_point(log(n_work_orders) ~ n_red, data = summary_by_machine) |> 
+  gf_labs(
+    x = "number of red indicator lights",
+    y = "Log of number of work orders"
+  )
+```
+
+```{r}
+loglin5 <- gf_point(log(n_work_orders) ~ n_amber, data = summary_by_machine) |> 
+  gf_labs(
+    x = "number of amber indicator lights",
+    y = "Log of number of work orders"
+  )
+```
+
+```{r}
+loglin6 <- gf_point(log(n_work_orders) ~ n_notification, data = summary_by_machine) |> 
+  gf_labs(
+    x = "number of notification indicator lights",
+    y = "Log of number of work orders"
+  )
+```
+
+```{r}
+loglin7 <- gf_point(log(n_work_orders) ~ n_malfunction, data = summary_by_machine) |> 
+  gf_labs(
+    x = "number of malfunction indicator lights",
+    y = "Log of number of work orders"
+  )
+```
+
+```{r fig.width=7, fig.height=7}
+require(ggpubr)
+ggarrange(loglin1,loglin2,loglin3,loglin4,loglin5,loglin6,loglin7,
+          ncol = 3, nrow = 3
+          )
+```
+
+### Model Selection
+
+```{r eval=FALSE, include=FALSE}
+machine_nb2 <- update(machine_nb2, na.action = 'na.fail')
+machine_nb2_dredge <- MuMIn::dredge(machine_nb2, rank = 'AIC')
+machine_nb2_dredge
+```
+
+#### Interpretation:
+This is our best model based on the predictors of `median_down_time`, `median_machine_hours`, `model`, `n_amber`, `n_malfunction`, `n_notification`, `n_red`. 
+
+### Prediction Plots
+
+```{r}
+plot(ggeffects::ggpredict(machine_nb2, terms = c('max_machine_hours')))
+
+```
+
+
+
+  

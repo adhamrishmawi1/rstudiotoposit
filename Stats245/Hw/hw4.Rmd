@@ -1,0 +1,100 @@
+---
+title: "Stat 245 -- HW Int Search Selection/Prediction"
+author: "Adham Rishmawi"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  html_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+```{r, setup, include = FALSE}
+# load packages that are going to be used
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+require(glmmTMB)
+require(MuMIn)
+
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = FALSE) # don't print warnings or messages in compiled document. So you MUST check them in RStudio!
+```
+
+
+```{r}
+search1 <- read_csv('https://sldr.netlify.app/data/election_searches.csv')
+
+```
+```{r}
+search_nb2 <- glmmTMB(Searches ~ Race_Ethnicity + Vote_Sway, 
+                      data = search1,
+                      family = nbinom2(link = 'log'))
+summary(search_nb2)
+```
+
+```{r}
+hyp_data1 <- expand.grid(Race_Ethnicity = "NA_NA_Hispanic_NA_NA_NA",
+                         Vote_Sway = seq(from = -20, to = 20, by = 1)
+                         )
+hyp_data1
+```
+This potential dataset is obtaining data from the two constant variables i used. I used NA_NA_Hispanic_NA_NA_NA and Vote_Sway from -20 and 20.
+
+###Predictions
+
+```{r}
+search_preds1 <- predict(search_nb2,
+                         newdata = hyp_data1,
+                         type = 'link',
+                         se.fit = TRUE)
+```
+
+
+```{r}
+hyp_data1 <- hyp_data1 |>
+  mutate(pred = exp(search_preds1$fit),
+         ci_low = exp(search_preds1$fit - 1.96*search_preds1$fit),
+         ci_high = exp(search_preds1$fit + 1.96*search_preds1$fit))
+```
+
+
+```{r}
+gf_line(pred ~ Vote_Sway,
+        data = hyp_data1) |>
+  gf_ribbon(ci_low + ci_high ~ Vote_Sway) 
+  
+```
+
+
+ This prediction plot has completely failed us and shows us a plot with high uncertainty. I would conclude that this variable is probably not the most viable option. I would try something different from Race_Ethnicity.
+ 
+ 
+###Model Selection
+
+```{r}
+search_nb2 <- search_nb2 |>
+update(na.action = 'na.fail')
+search1_dred <- dredge(search_nb2, rank = 'AIC')
+
+search1_dred
+```
+
+I can conclude that my variable Race_ethnicity was the wrong choice because it failed my prediction plot. I should search for a different variable potentially like Sex or or Group as a better variable of choice. Our AIC isnt much affected from our variable so this even reinforces our decision to change or variables.  
+
+ 
+ 
+ 
+ 

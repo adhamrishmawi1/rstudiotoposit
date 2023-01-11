@@ -1,0 +1,121 @@
+---
+title: "Stat 245 -- HW ??"
+author: "A. Student"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+    fig_height: 4
+    fig_width: 8
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+```{r, setup, include = FALSE}
+# load packages that are going to be used
+require(tidyverse)   # this loads mosaic, ggformula, etc. too
+require(ggformula)
+require(mosaic)
+
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+theme_set(theme_bw(base_size=12))     # change theme for ggplot2/ggformula
+
+knitr::opts_chunk$set(
+  echo = TRUE,      # for homework, always show R code (this is the default)
+  tidy = FALSE,     # display code as typed (rather than reformatted)
+  size = "small",   # slightly smaller font for code
+  message = FALSE, warning = FALSE) # don't print warnings or messages in compiled document. So you MUST check them in RStudio!
+```
+
+
+```{r}
+daily_rides <- read_csv("~/data202/homework02/bikeshare-day.csv") %>%
+    mutate(across(c(season, year, holiday, workingday, day_of_week, weather_type, rider_type), as.factor))
+    glimpse(daily_rides)
+```
+```{r}
+daily_rides <- daily_rides %>%
+  mutate(day_of_week = factor(day_of_week, levels = c(0, 1, 2, 3, 4, 5, 6), labels = c("Sun", "Mon", "Tues", "Weds", "Thurs", "Fri", "Sat")))
+```
+##### By looking at the days of the weekend and weekdays we can determine that 0 is Sunday and the following days must be the chronological order
+
+date: this stamps the marker of when the data was recorded/
+
+rider_type: declares what type of rider this person is and how to differentiate between casual rider and heavy user.
+
+rides: the amount of times a ride has occurred for this particular individual.
+
+holiday: is a binary option to determine whether rides occurred on a holiday or not.
+
+working day: is also a two option criteria where it determines whether  the day is a weekend or weekday.
+
+day_of_week: determines which day it is from Sunday to Saturday.
+
+
+```{r}
+daily_rides %>%
+  ggplot() +
+  aes(x = date, y = rides, col = rider_type) +
+  geom_point(size=1, alpha= 0.5) +
+  geom_smooth() +
+  labs(
+    x = "Date", 
+    y = "number of rides", 
+    title = "Rides by date",
+    subtitle = "for casual and registered riders")
+
+
+```
+```{r}
+daily_rides %>% 
+  ggplot() +
+  aes(x = temp, y = rides, color = rider_type) +
+  facet_wrap(~workingday) +
+  geom_point()
+```
+###### this graph is split between weekend and workdays to demonstrate the neccesity of riding a bike and see the discrepancy  
+```{r}
+daily_rides %>% 
+  ggplot() +
+  aes(x = temp, y = rides, color = rider_type) +
+  facet_wrap(~rider_type) +
+  geom_point()
+```
+##### this graph is facet of casual vs registered indivuals to tell the observer that registered bike user willuse their bikes in lower temperatures
+
+
+```{r}
+daily_rides %>% 
+  ggplot() +
+  aes(x = day_of_week, y = rides, fill = rider_type) +
+  labs(
+    x = "Day of Week", 
+    y = "Rides", 
+    title = "Graph#5",
+    subtitle = "best attempt") + 
+   geom_boxplot()
+theme_classic()
+```
+This plot shows us the big grouping of people and whether that be registered or casual people and their amount of rides!
+
+
+```{r}
+daily_rides %>% 
+  ggplot() +
+  aes(x = rides, y = humidity, color =   rider_type) +
+  labs(
+    x = "Rides", 
+    y = "Humidity level", 
+    title = "Graph#5",
+    subtitle = "best attempt") + 
+   geom_col()
+```
+
+this graph shows us the that registered riders tend to ride in lower humidified weathers then casual riders! 
+
+
+  

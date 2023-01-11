@@ -1,0 +1,140 @@
+---
+title: "Stat 245 -- HW ??"
+author: "A. Student"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+    fig_height: 5
+    fig_width: 10
+  pdf_document:
+    fig_height: 2.2
+    fig_width: 4
+  word_document:
+    fig_height: 2.2
+    fig_width: 4
+---
+
+This document is a record of some basic ggplot2 exercises.
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(gapminder)
+
+# Put the data in the Environment (this contains numerical variables such as life expectancy, population, and etc... )
+Econ_of_con <- gapminder::gapminder
+
+# Extract the data for the latest year in the dataset, for plots that don't involve year.(this file contains the latest year of information which 2007)
+factorized_Econ <- filter(gapminder, year == 2007)
+```
+
+
+After running the `setup` code chunk, you should have two tibbles, both listed in the "Environment" tab. Name and describe those tibbles here. You may know more about their value when 're finished with the lab, so write what you can now and come back later and fill in the details.
+
+## Styling and labeling plots
+
+🚧
+Imagine that you're trying to understand the life expectancy in the US over time, and modify the following plot to:
+
+1. Add labels (labs) for the x and y axes. Use ?gapminder at the Console to get the data documentation if needed.
+2. Add a title (also labs).
+3. Set the color of the line to green. (Is it green now?)
+4. Set the chunk name to something more meaningful than plot-1.
+
+Finally, add a short explanation of what the visualization suggests.
+
+This shows us that the United States life expectancy has risen over the course of the 20th century all the way to modern day USA.
+
+```{r Life_expectancy_1}
+Econ_of_con %>% 
+  filter(country == "United States") %>% 
+  ggplot() +
+  aes(x = year, y = lifeExp) +
+  labs(x = "Years", title =  "Life Expectancy over recent selected years", y = "Life expentancy (years)") +
+  geom_line(color = "green")
+```
+
+## Mapping vs Faceting
+
+🚧
+In the following plot, notice that we're `filter`ing to only include rows where the `country` is in the list of `countries` that we made. This is so that we don't have `r length(unique(gapminder$country))` different colors or facets in these graphs.
+
+Imagine that you're trying to understand the life expectancy in these countries over time, and then do the following:
+
+1. Run the plot as specified. Why is it shaped like this? (If you're not sure, click `gapminder` in  the Environment pane and think about how you'd draw a line with that data.)
+2. Map `color` to `country`. How has the plot changed? (each line is designated towards a country)
+3. Facet by country. Is this better than the color mapping?(no because the line would no appear for each country for some odd reason so I believe the color coded country graph is optimal)
+4. Setting `scales = "free_y"` in the faceting function. Is this better?(it did not assist in displaying the lines in each individual graph(UPDATE: it finally worked out after dabbling with the variables!!))
+
+When finished, set your plot to the most useful form given the goal stated above. Add an explanation of what the visualization suggests.
+
+```{r plot-2}
+countries <- c(
+  "China", "India", "United States",
+  "Indonesia", "Brazil", "Pakistan",
+  "Bangladesh", "Nigeria", "Japan")
+
+Econ_of_con %>% 
+  filter(country %in% countries) %>% 
+  ggplot() +
+  aes(x = year, y = lifeExp, color = country,) +
+  facet_wrap(~country, scales = "free_y") +
+  geom_line()
+
+```
+
+## Univariate analysis &mdash; Continuous
+
+🚧
+Pick one of the continuous variables and pose a question you'd like to answer. Then, make a plot that shows its distribution and help answer your question. 
+```{r}
+countries <- c(
+  "China", "India", "United States",
+  "Indonesia", "Brazil", "Pakistan",
+  "Bangladesh", "Nigeria", "Japan")
+
+
+Econ_of_con %>% 
+  filter(country %in% countries) %>% 
+  ggplot() +
+  aes(x = year, y = pop, color = country,) +
+  facet_wrap(~country, scales = "free_y",  labs(x = "year", y = "pop")) +
+  geom_line()
+```
+
+
+
+##### By simply changing the y axis to population we can see how the advances in years resulted in larger populations
+Include your plot and a description of what it suggests with respect to your initial question.
+
+## Univariate Analysis &mdash; Categorical
+
+🚧
+Imagine that you'd like to know which continent has the most countries. Compose a plot that helps to answer this question. (Use `gapminder_latest`, which has one row per country.)
+```{r}
+factorized_Econ |>
+  ggplot() +
+  aes(x = continent) +
+  geom_bar()
+  
+```
+
+##### this graph entails that Africa has the most amount of countries(I didnt know how to remove the sublevel labels which are th country names and need help with that!)
+Include your plot and a description of what it suggests with respect to the given question.
+
+## Bivariate Analysis &mdash; Numerical/Categorical
+
+🚧
+Pick one of the continuous variables and set a question you'd like to answer about that variable with respect to the continents. If possible, choose a variable you haven't chosen before. Compose a plot that helps you answer your question.
+
+```{r}
+
+
+factorized_Econ |>
+  ggplot() +
+  aes(x = continent , y = gdpPercap, color = lifeExp) +
+  geom_line()
+```
+
+##### This graph aims at exploring the details of each continents gdp and what life expectancy looks like with different gdps
+
+Include your plot and a description of what it suggests with respect to your initial question.

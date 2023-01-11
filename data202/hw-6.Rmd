@@ -1,0 +1,122 @@
+---
+title: "DATA 202 Homework 6"
+author: "Adham Rishmawi"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    code_download: yes
+---
+
+```{r setup, include=FALSE}
+# Set some useful chunk options for code chunks.
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE,    # display errors but keep going.
+  comment = "",    # don't add '##' characters before output.
+  message = FALSE  # don't include messages in the knitted output (check them in RStudio)
+  )
+library(tidyverse)
+library(tidymodels)
+library(MLmetrics)
+theme_set(theme_bw())
+```
+
+## Problem 1
+Suppose We want to predict the sale price of homes
+
+1. Which locations have the largest prices associated with it
+2. What is the sale-ability of this property even with its price
+3. regression because we are determining a  price which fits the qualifications of a model
+4. a potential good error metric can be the difference between the price predicted to sell vs the price it actually sold as made into a (Mean Squared error) percentage! 
+5. I would say that the expected performance of a model as a decision-maker would be great because we can use predictors such as location, size, and demand as categorical decisions and make great predictions on 
+6. a inappropriate error metric would be something like a MASE which  measures the accuracy of forecasts (MAE divided by the Mean Absolute Error in sample one-step naive forecast)
+
+
+
+## Problem 2
+
+```{r}
+ames_home_sales <- read_builtin("ames", package = "modeldata") %>% 
+  mutate(Sale_Price = Sale_Price / 1000) %>% 
+  filter(Gr_Liv_Area < 4000, Sale_Condition == "Normal")
+```
+
+
+A.Hold out 10% of homes to validate the model.
+```{r}
+home_split <- ames_home_sales |>
+  initial_split(prop = 0.1)
+home_training <- home_split|>
+  training()
+home_test <- home_split|>
+  testing()
+```
+B.
+```{r}
+model<- lm(Sale_Price ~ Gr_Liv_Area, data = home_training )
+plot(model)
+```
+C.
+MAE: the predictions are typically off by  $5000-7000
+MAPE: Predictions are typically off by 6-7%
+
+D.
+I would expect that this decision-maker will be accurate enough to predict the prices of houses to be listed
+
+## Problem 3
+
+```{r}
+ames_vs_median <- ames_home_sales %>% 
+  mutate(sale_category = case_when(
+    Sale_Price > median(Sale_Price) ~ "Above Median",
+    TRUE ~ "Below Median"
+  ) %>% 
+    as_factor() %>% 
+    fct_relevel("Above Median") # Make sure that "Above Median" is considered the positive class.
+  )
+```
+for each home, we are tasked to say either “above median” or “below median”
+1. Which types of houses are typically above or below the Median
+2. What are the major factors to a above median property
+3.This is classification because it is either above or below Median
+4. a good error metric is MAPE because it utilizes percentages
+5.I would say that the expect performance of this decision maker is to divide the houses by types and sizes
+6.an inappropriate error metrics might be MAE because values wouldn't be useful for a categorical matters.
+
+
+## Problem 4
+A.
+```{r}
+home_split1 <- ames_vs_median |>
+  initial_split(prop = 0.1)
+home_training1 <- home_split1|>
+  training()
+home_test1 <- home_split1|>
+  testing()
+```
+
+B.
+```{r}
+decision_tree_fit <- decision_tree(mode = "classification", tree_depth = 3)|>
+  set_engine("rpart")|>
+  fit(
+    Lot_Shape~ Gr_Liv_Area + Bldg_Type,
+    data = home_training1
+  )
+```
+```{r}
+decision_tree_fit|>
+  extract_fit_engine()|>
+  rpart.plot::rpart.plot(roundint = FALSE)
+```
+
+
+
+C.
+MAE: NA
+MAPE: Predictions are typically off by 6-7%
+
+D.
+I would expect that this decision-maker will be accurate enough to predict the houses to be either higher or lower than the median!
+

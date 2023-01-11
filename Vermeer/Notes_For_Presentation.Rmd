@@ -1,0 +1,17 @@
+---
+title: "Notes_With_Slides"
+output: html_document
+---
+
+## Opening Slide:
+
+Hello Vermeer...
+
+## Overview:
+Overview of what we are going to talk about.
+
+## Meet the Researchers:
+Do our own introductions
+
+## Covering the Dataset and EDAs:
+Our question covers: 
